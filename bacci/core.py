@@ -86,7 +86,7 @@ def case_search_text(case: dict[str, Any], customer_email: str) -> str:
     source = {key: value for key, value in case.items() if key not in internal}
     dates = [date.fromisoformat(value).strftime("%d/%m/%Y") for value in
              (case.get("fecha_compromiso"), case.get("requested_date")) if value]
-    return search_text((source, customer_email, dates, case_label(case),
+    return search_text((case["case_id"], source, customer_email, dates, case_label(case),
                         case["priority"] if case["attention"] else ""))
 
 
@@ -229,7 +229,7 @@ def connect(path: Path) -> sqlite3.Connection:
           case_id TEXT PRIMARY KEY, kind TEXT NOT NULL, order_id TEXT, line_id TEXT,
           client_id TEXT, client_name TEXT, priority TEXT NOT NULL, priority_rank INTEGER NOT NULL,
           due_date TEXT, pending REAL, reason TEXT, action TEXT, attention INTEGER NOT NULL,
-          unresolved INTEGER NOT NULL, sort_time TEXT, detail_json TEXT NOT NULL,
+          unresolved INTEGER NOT NULL, sort_time TEXT, label TEXT, detail_json TEXT NOT NULL,
           search_text TEXT NOT NULL DEFAULT ''
         );
         CREATE INDEX IF NOT EXISTS cases_queue ON cases(attention, priority_rank, due_date, case_id);
@@ -240,11 +240,23 @@ def connect(path: Path) -> sqlite3.Connection:
           added_messages INTEGER NOT NULL, repeated_messages INTEGER NOT NULL,
           conflicting_messages INTEGER NOT NULL, active_messages INTEGER NOT NULL,
           total_cases INTEGER NOT NULL, attention_cases INTEGER NOT NULL, unresolved_cases INTEGER NOT NULL,
-          output_sha256 TEXT NOT NULL, elapsed_ms REAL NOT NULL, created_at TEXT NOT NULL
+          output_sha256 TEXT NOT NULL, elapsed_ms REAL NOT NULL, created_at TEXT NOT NULL,
+          changed_cases INTEGER
         );
+        CREATE TABLE IF NOT EXISTS run_changes (
+          run_id INTEGER NOT NULL, case_id TEXT NOT NULL, changed_fields TEXT NOT NULL,
+          before_json TEXT, after_json TEXT, PRIMARY KEY(run_id,case_id)
+        );
+        CREATE INDEX IF NOT EXISTS run_changes_run ON run_changes(run_id,case_id);
     """)
-    if "search_text" not in {row[1] for row in connection.execute("PRAGMA table_info(cases)")}:
+    case_columns = {row[1] for row in connection.execute("PRAGMA table_info(cases)")}
+    if "search_text" not in case_columns:
         connection.execute("ALTER TABLE cases ADD COLUMN search_text TEXT NOT NULL DEFAULT ''")
+    if "label" not in case_columns:
+        connection.execute("ALTER TABLE cases ADD COLUMN label TEXT")
+    connection.execute("CREATE INDEX IF NOT EXISTS cases_review ON cases(label,attention)")
+    if "changed_cases" not in {row[1] for row in connection.execute("PRAGMA table_info(runs)")}:
+        connection.execute("ALTER TABLE runs ADD COLUMN changed_cases INTEGER")
     message_columns = {row[1] for row in connection.execute("PRAGMA table_info(messages)")}
     for column, kind in (("source_file", "TEXT"), ("source_sheet", "TEXT"), ("source_row", "INTEGER")):
         if column not in message_columns:
@@ -356,7 +368,11 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
         superseded = {m["supersedes"] for m in emails if m["supersedes"]}
         requests = [m for m in emails if m["intent"] == "cambio_fecha" and m["message_id"] not in superseded]
         if requests:
-            line["requested_date"] = requests[-1]["requested_date"]
+            requested_dates = sorted({m["requested_date"] for m in requests if m["requested_date"]})
+            line["requested_dates"] = requested_dates
+            # Sin rectificación explícita, dos fechas distintas siguen activas:
+            # la última llegada no prevalece por sí sola.
+            line["requested_date"] = requested_dates[0] if len(requested_dates) == 1 else None
             line["request_conflict"] = len(requests) > 1
         intents = {m["intent"] for m in emails}
         changed_contact = any("nuevo contacto" in fold(m["body"] or "") or m["sender_unverified"] for m in emails if m["intent"] in ("cambio_fecha", "cancelacion"))
@@ -373,7 +389,8 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
         has_request = bool(requests)
         cancellation = "cancelacion" in intents
         followup = "seguimiento" in intents
-        urgent_request = bool(line["requested_date"] and date.fromisoformat(line["requested_date"]) <= today)
+        urgent_request = any(date.fromisoformat(requested_date) <= today
+                             for requested_date in line.get("requested_dates", []))
         if cancellation:
             priority, rank = "Alta", 0
         elif urgent_request:
@@ -419,6 +436,12 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
             reason, action = "Consulta de estado", "Comprobar expedición y responder con unidades pendientes verificadas"
         else:
             reason, action = "Unidades pendientes", "Planificar la siguiente expedición"
+        if len(line.get("requested_dates", [])) > 1:
+            if reason == "Cambio de fecha solicitado":
+                reason = "Peticiones de fecha incompatibles"
+                action = "Aclarar la fecha solicitada por un canal conocido antes de confirmar o cambiar el ERP"
+            else:
+                action += ". Aclarar las fechas solicitadas antes de confirmar un cambio"
         if not attention:
             reason, action = "Línea servida sin incidencia", "Sin acción operativa pendiente"
         line.update({"priority": priority, "priority_rank": rank, "attention": attention,
@@ -438,6 +461,19 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
     return sorted(cases, key=_sort_case)
 
 
+CHANGE_FIELDS = ("cliente", "sku", "color", "talla", "uds_pedidas", "uds_enviadas", "pendientes",
+                 "fecha_compromiso", "requested_date", "requested_dates", "priority", "label", "reason", "action",
+                 "issues", "attention", "unresolved", "email_ids")
+
+
+def case_snapshot(case: dict[str, Any]) -> dict[str, Any]:
+    """Datos operativos comparables entre cargas, sin ruido de orden o procedencia física."""
+    snapshot = {key: case.get(key) for key in CHANGE_FIELDS if key != "email_ids"}
+    snapshot.update(case_id=case["case_id"], order_id=case.get("order_id"), line_id=case.get("line_id"),
+                    email_ids=sorted(mail["message_id"] for mail in case.get("emails", [])))
+    return snapshot
+
+
 @dataclass(frozen=True)
 class RunResult:
     run_id: int
@@ -450,6 +486,7 @@ class RunResult:
     total_cases: int
     attention_cases: int
     unresolved_cases: int
+    changed_cases: int | None
     output_sha256: str
     elapsed_ms: float
 
@@ -462,12 +499,15 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
     orders_sha = digest({"orders": order_rows, "customers": customer_rows})
     connection = connect(db_path)
     try:
-        prior_dataset = connection.execute("SELECT dataset FROM runs ORDER BY run_id DESC LIMIT 1").fetchone()
-        if prior_dataset and prior_dataset["dataset"] != dataset:
-            raise ValueError(f"La base {db_path} pertenece a {prior_dataset['dataset']}, no a {dataset}")
+        prior_run = connection.execute("SELECT run_id,dataset FROM runs ORDER BY run_id DESC LIMIT 1").fetchone()
+        if prior_run and prior_run["dataset"] != dataset:
+            raise ValueError(f"La base {db_path} pertenece a {prior_run['dataset']}, no a {dataset}")
         existing = {row["message_id"]: row["payload_hash"] for row in connection.execute("SELECT message_id,payload_hash FROM messages")}
         added = repeated = conflicting = 0
         with connection:
+            before_cases = ({row["case_id"]: case_snapshot(json.loads(row["detail_json"]))
+                             for row in connection.execute("SELECT case_id,detail_json FROM cases")}
+                            if prior_run else {})
             # Bases creadas antes de guardar procedencia: recuperar el primer
             # archivo/fila cuyo contenido coincide, sin cambiar el correo.
             if connection.execute("SELECT 1 FROM messages WHERE source_file IS NULL LIMIT 1").fetchone():
@@ -515,30 +555,47 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
               source_file,source_sheet,source_row FROM messages""")]
             all_cases = build_cases(order_rows, customer_rows, messages, as_of, include_inactive=True)
             cases = [case for case in all_cases if case["attention"]]
+            after_cases = {case["case_id"]: case_snapshot(case) for case in all_cases}
+            changes = []
+            if prior_run:
+                for case_id in sorted(before_cases.keys() | after_cases.keys()):
+                    before, after = before_cases.get(case_id), after_cases.get(case_id)
+                    if before != after:
+                        fields = (["case"] if before is None or after is None else
+                                  [key for key in CHANGE_FIELDS if before[key] != after[key]])
+                        changes.append((case_id, fields, before, after))
+            changed_cases = len(changes) if prior_run else None
             customer_emails = {str(row.get("cliente_id")): row.get("email") or "" for row in customer_rows}
             connection.execute("DELETE FROM cases")
             connection.executemany("""INSERT INTO cases
               (case_id,kind,order_id,line_id,client_id,client_name,priority,priority_rank,due_date,
-               pending,reason,action,attention,unresolved,sort_time,detail_json,search_text)
-              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
+               pending,reason,action,attention,unresolved,sort_time,label,detail_json,search_text)
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
                 (c["case_id"], c["kind"], c.get("order_id"), c.get("line_id"), c.get("cliente_id"), c.get("cliente"),
                  c["priority"], c["priority_rank"], c.get("fecha_compromiso"), c.get("pendientes"), c["reason"],
-                 c["action"], int(c["attention"]), int(c["unresolved"]), c.get("sort_time"), canonical_json(c),
+                 c["action"], int(c["attention"]), int(c["unresolved"]), c.get("sort_time"), c["label"], canonical_json(c),
                  case_search_text(c, customer_emails.get(c.get("cliente_id"), ""))) for c in all_cases
             ])
             output_sha = digest(cases)
             active_count = sum(m["received_at"] <= as_of.isoformat(timespec="minutes") for m in messages)
-            elapsed = round((time.perf_counter() - started) * 1000, 2)
             cursor = connection.execute("""INSERT INTO runs(dataset,as_of,orders_file,email_file,orders_sha256,
               added_messages,repeated_messages,conflicting_messages,active_messages,total_cases,attention_cases,
-              unresolved_cases,output_sha256,elapsed_ms,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+              unresolved_cases,output_sha256,elapsed_ms,created_at,changed_cases) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
               (dataset, as_of.isoformat(timespec="minutes"), orders_path.name, email_path.name, orders_sha, added,
                repeated, conflicting, active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases),
-               output_sha, elapsed, datetime.now().isoformat(timespec="seconds")))
+               output_sha, 0.0, datetime.now().isoformat(timespec="seconds"), changed_cases))
             run_id = cursor.lastrowid
-            connection.execute("PRAGMA user_version=5")
+            connection.executemany("""INSERT INTO run_changes(run_id,case_id,changed_fields,before_json,after_json)
+              VALUES (?,?,?,?,?)""", [
+                (run_id, case_id, canonical_json(fields), canonical_json(before) if before else None,
+                 canonical_json(after) if after else None) for case_id, fields, before, after in changes
+            ])
+            elapsed = round((time.perf_counter() - started) * 1000, 2)
+            connection.execute("UPDATE runs SET elapsed_ms=? WHERE run_id=?", (elapsed, run_id))
+            connection.execute("PRAGMA user_version=7")
         return RunResult(run_id, dataset, as_of.isoformat(timespec="minutes"), added, repeated, conflicting,
-                         active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases), output_sha, elapsed)
+                         active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases),
+                         changed_cases, output_sha, elapsed)
     finally:
         connection.close()
 
@@ -550,13 +607,15 @@ def summary(db_path: Path) -> dict[str, Any]:
         counts = {row["priority"]: row["n"] for row in connection.execute("SELECT priority,COUNT(*) n FROM cases WHERE attention=1 GROUP BY priority")}
         clients = [dict(row) for row in connection.execute("SELECT DISTINCT client_id id,client_name name FROM cases WHERE client_id IS NOT NULL ORDER BY name")]
         records = connection.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        review_cases = connection.execute("SELECT COUNT(*) FROM cases WHERE attention=1 AND label='Revisión humana'").fetchone()[0]
         return {"latest_run": dict(latest) if latest else None, "priorities": counts, "clients": clients,
-                "total_records": records}
+                "total_records": records, "review_cases": review_cases}
     finally:
         connection.close()
 
 
-def list_cases(db_path: Path, *, client: str | None = None, priority: str | None = None, view: str = "all", search: str = "", page: int = 1, page_size: int = 6) -> dict[str, Any]:
+def list_cases(db_path: Path, *, client: str | None = None, priority: str | None = None, review: bool = False,
+               view: str = "all", search: str = "", page: int = 1, page_size: int = 6) -> dict[str, Any]:
     connection = connect(db_path)
     try:
         clauses = [] if view == "records" else ["attention=1"]
@@ -569,6 +628,8 @@ def list_cases(db_path: Path, *, client: str | None = None, priority: str | None
             clauses.append("attention=1")
             clauses.append("priority=?")
             params.append(priority)
+        if review:
+            clauses.extend(("attention=1", "label='Revisión humana'"))
         if view == "unresolved":
             clauses.append("unresolved=1")
         elif view == "high":
@@ -588,7 +649,7 @@ def list_cases(db_path: Path, *, client: str | None = None, priority: str | None
         where = " AND ".join(clauses) if clauses else "1=1"
         total = connection.execute(f"SELECT COUNT(*) FROM cases WHERE {where}", params).fetchone()[0]
         rows = connection.execute(f"""SELECT case_id,kind,order_id,line_id,client_id,client_name,priority,
-          due_date,pending,reason,action,attention,unresolved FROM cases WHERE {where}
+          due_date,pending,reason,action,attention,unresolved,label FROM cases WHERE {where}
           ORDER BY priority_rank,due_date IS NULL,due_date,sort_time DESC,case_id LIMIT ? OFFSET ?""",
           [*params, page_size, (max(1, page) - 1) * page_size]).fetchall()
         return {"total": total, "page": max(1, page), "page_size": page_size, "items": [dict(row) for row in rows]}
@@ -609,5 +670,28 @@ def recent_runs(db_path: Path, limit: int = 20) -> list[dict[str, Any]]:
     connection = connect(db_path)
     try:
         return [dict(row) for row in connection.execute("SELECT * FROM runs ORDER BY run_id DESC LIMIT ?", (limit,))]
+    finally:
+        connection.close()
+
+
+def get_run_changes(db_path: Path, run_id: int, *, page: int = 1, page_size: int = 20) -> dict[str, Any] | None:
+    connection = connect(db_path)
+    try:
+        run = connection.execute("SELECT run_id,as_of,changed_cases FROM runs WHERE run_id=?", (run_id,)).fetchone()
+        if not run:
+            return None
+        previous = connection.execute("SELECT as_of FROM runs WHERE run_id<? ORDER BY run_id DESC LIMIT 1",
+                                      (run_id,)).fetchone()
+        page = max(1, page)
+        rows = connection.execute("""SELECT case_id,changed_fields,before_json,after_json FROM run_changes
+          WHERE run_id=? ORDER BY case_id LIMIT ? OFFSET ?""", (run_id, page_size, (page - 1) * page_size))
+        return {"run_id": run_id, "as_of": run["as_of"],
+                "previous_as_of": previous["as_of"] if previous else None,
+                "available": run["changed_cases"] is not None, "total": run["changed_cases"],
+                "page": page, "page_size": page_size,
+                "items": [{"case_id": row["case_id"], "changed_fields": json.loads(row["changed_fields"]),
+                           "before": json.loads(row["before_json"]) if row["before_json"] else None,
+                           "after": json.loads(row["after_json"]) if row["after_json"] else None}
+                          for row in rows]}
     finally:
         connection.close()

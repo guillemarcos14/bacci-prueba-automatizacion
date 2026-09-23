@@ -6,8 +6,8 @@ from pathlib import Path
 
 from openpyxl import load_workbook
 
-from bacci.core import (INITIAL_CUTOFF, UPDATE_CUTOFF, build_lines, case_label, classify_email,
-                        extract_references, get_case, list_cases, load_sheet, run_import)
+from bacci.core import (INITIAL_CUTOFF, UPDATE_CUTOFF, build_cases, build_lines, case_label, classify_email,
+                        extract_references, get_case, get_run_changes, list_cases, load_sheet, run_import, summary)
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -79,6 +79,25 @@ class SourceAndCalculationTests(unittest.TestCase):
                     request_count=0, priority="Media")
         self.assertEqual(case_label(case), "Pendiente")
 
+    def test_multiple_active_requested_dates_remain_ambiguous(self):
+        orders = load_sheet(ROOT / "Pedidos_muestra.xlsx", "Pedidos")
+        clients = load_sheet(ROOT / "Pedidos_muestra.xlsx", "Clientes")
+        def message(mid, received, requested, body=""):
+            return {"message_id": mid, "received_at": received, "sender": "prueba@example.com",
+                    "recipient": "operaciones@bacci.test", "subject": "Solicitud P-26002, línea 10000",
+                    "body": body or f"Solicitamos {requested} para P-26002, línea 10000.",
+                    "source_file": "prueba.xlsx", "source_sheet": "Correos", "source_row": 2}
+        messages = [message("msg-90001", "2026-09-10T09:00", "09/09/2026"),
+                    message("msg-90002", "2026-09-10T09:30", "13/09/2026")]
+        case = next(c for c in build_cases(orders, clients, messages, INITIAL_CUTOFF)
+                    if c["case_id"] == "line:P-26002:10000")
+        self.assertIsNone(case["requested_date"])
+        self.assertEqual(case["requested_dates"], ["2026-09-09", "2026-09-13"])
+        self.assertTrue(case["request_conflict"])
+        self.assertEqual(case["priority"], "Alta")
+        self.assertIn("varias peticiones sin rectificación explícita", case["issues"])
+        self.assertIn("Aclarar las fechas solicitadas", case["action"])
+
 
 class UpdateSequenceTests(unittest.TestCase):
     def test_initial_update_repeat_and_human_review_cases(self):
@@ -89,6 +108,8 @@ class UpdateSequenceTests(unittest.TestCase):
             before = get_case(db, "line:P-26002:10000")
             self.assertEqual(initial.added_messages, 24)
             self.assertEqual(initial.repeated_messages, 1)
+            self.assertIsNone(initial.changed_cases)
+            self.assertFalse(get_run_changes(db, initial.run_id)["available"])
             self.assertEqual(before["requested_date"], "2026-09-12")
             self.assertEqual(get_case(db, "line:P-26004:10000")["pendientes"], 250)
             self.assertTrue(get_case(db, "line:P-26004:10000")["overdue"])
@@ -99,6 +120,14 @@ class UpdateSequenceTests(unittest.TestCase):
             after = get_case(db, "line:P-26002:10000")
             self.assertEqual(updated.added_messages, 3)
             self.assertEqual(updated.repeated_messages, 2)
+            self.assertEqual(updated.changed_cases, 2)
+            changes = get_run_changes(db, updated.run_id)
+            self.assertEqual({item["case_id"] for item in changes["items"]},
+                             {"line:P-26002:10000", "line:P-26004:10000"})
+            correction = next(item for item in changes["items"] if item["case_id"] == "line:P-26002:10000")
+            self.assertEqual((correction["before"]["requested_date"], correction["after"]["requested_date"]),
+                             ("2026-09-12", "2026-09-13"))
+            self.assertEqual(correction["changed_fields"], ["requested_date", "requested_dates", "email_ids"])
             self.assertEqual(after["requested_date"], "2026-09-13")
             self.assertEqual(len(after["emails"]), 4)
             email_sources = {mail["message_id"]: (mail["source_file"], mail["source_sheet"], mail["source_row"])
@@ -113,8 +142,16 @@ class UpdateSequenceTests(unittest.TestCase):
             repeated = run_import(db, "sample", orders, ROOT / "Correos_actualizacion.xlsx", UPDATE_CUTOFF)
             self.assertEqual(repeated.added_messages, 0)
             self.assertEqual(repeated.repeated_messages, 5)
+            self.assertEqual(repeated.changed_cases, 0)
+            self.assertEqual(get_run_changes(db, repeated.run_id)["items"], [])
             self.assertEqual(repeated.output_sha256, updated.output_sha256)
             self.assertEqual(list_cases(db, view="unresolved")["total"], updated.unresolved_cases)
+            self.assertEqual(summary(db)["review_cases"], 7)
+            review = list_cases(db, review=True, page_size=100)
+            self.assertEqual(review["total"], 7)
+            self.assertTrue(all(item["label"] == "Revisión humana" for item in review["items"]))
+            self.assertEqual(list_cases(db, review=True, client="C002", priority="Alta",
+                                        search="P-26009")["items"][0]["case_id"], "line:P-26009:10000")
 
             # Una base anterior sin procedencia recupera el primer origen real,
             # también si el mensaje reaparece en el lote de actualización.

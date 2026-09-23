@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
 import sys
 import tempfile
+from contextlib import closing
 from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from bacci.core import INITIAL_CUTOFF, UPDATE_CUTOFF, build_lines, get_case, load_sheet, run_import  # noqa: E402
+from bacci.core import INITIAL_CUTOFF, UPDATE_CUTOFF, build_lines, case_label, get_case, get_run_changes, load_sheet, list_cases, run_import, summary  # noqa: E402
 
 
 def check(checks: list[dict], name: str, expected: object, actual: object) -> None:
@@ -41,6 +43,26 @@ def evaluate(dataset: str) -> dict:
         check(checks, "Mensajes nuevos al repetir", 0, repeated.added_messages)
         check(checks, "Reentregas al repetir", 5, repeated.repeated_messages)
         check(checks, "Digest estable tras repetición", updated.output_sha256, repeated.output_sha256)
+        check(checks, "Casos afectados por la actualización", 2, updated.changed_cases)
+        check(checks, "Casos afectados al repetir", 0, repeated.changed_cases)
+        changed = get_run_changes(db, updated.run_id)
+        check(checks, "Identidad de casos afectados", ["line:P-26002:10000", "line:P-26004:10000"],
+              [item["case_id"] for item in changed["items"]])
+        correction = next(item for item in changed["items"] if item["case_id"] == "line:P-26002:10000")
+        check(checks, "Fecha antes/después explicada", ("2026-09-12", "2026-09-13"),
+              (correction["before"]["requested_date"], correction["after"]["requested_date"]))
+        check(checks, "Filtro revisión humana", 7 if dataset == "sample" else 767,
+              list_cases(db, review=True)["total"])
+        check(checks, "Conteo visible de revisión humana", 7 if dataset == "sample" else 767,
+              summary(db)["review_cases"])
+        date_case = get_case(db, "line:P-26002:10000" if dataset == "sample" else "line:P-30168:40000")
+        check(checks, "No escoger una fecha entre peticiones incompatibles",
+              "2026-09-13" if dataset == "sample" else None, date_case["requested_date"])
+        check(checks, "Conservar todas las fechas solicitadas activas",
+              ["2026-09-13"] if dataset == "sample" else ["2026-09-21", "2026-09-24"],
+              date_case["requested_dates"])
+        check(checks, "Acción pide aclarar fechas incompatibles", dataset == "full",
+              "Aclarar las fechas solicitadas" in date_case["action"])
         check(checks, "Corte inicial", INITIAL_CUTOFF.isoformat(timespec="minutes"), initial.as_of)
         check(checks, "Corte actualizado", UPDATE_CUTOFF.isoformat(timespec="minutes"), updated.as_of)
         check(checks, "P-26002 solicitud inicial", "2026-09-12", before["requested_date"])
@@ -70,6 +92,35 @@ def evaluate(dataset: str) -> dict:
         check(checks, "Cálculo visible y fuente conservada", (800, 0, 800, 84 if dataset == "sample" else 1865),
               (after["uds_pedidas"], after["uds_enviadas"], after["pendientes"],
                after["source_rows"][0]["__source_row"]))
+        with closing(sqlite3.connect(db)) as connection:
+            all_cases = [json.loads(row[0]) for row in connection.execute("SELECT detail_json FROM cases")]
+            message_ids = {row[0] for row in connection.execute("SELECT message_id FROM messages")}
+        check(checks, "Casos con varias fechas activas incompatibles", 0 if dataset == "sample" else 43,
+              sum(len(case.get("requested_dates", [])) > 1 for case in all_cases))
+        arithmetic_errors = []
+        provenance_errors = []
+        label_errors = []
+        for case in all_cases:
+            if case_label(case) != case["label"]:
+                label_errors.append(case["case_id"])
+            for source in case.get("source_rows", []):
+                if not all(source.get(key) for key in ("__source_file", "__source_sheet", "__source_row")):
+                    provenance_errors.append(case["case_id"])
+            for mail in case.get("emails", []):
+                if mail["message_id"] not in message_ids or not all(mail.get(key) for key in
+                    ("source_file", "source_sheet", "source_row")):
+                    provenance_errors.append(case["case_id"])
+            source_rows = case.get("source_rows", [])
+            if len(source_rows) == 1:
+                ordered, shipped = source_rows[0].get("uds_pedidas"), source_rows[0].get("uds_enviadas")
+                if all(isinstance(value, (int, float)) and not isinstance(value, bool) and value >= 0
+                       for value in (ordered, shipped)):
+                    expected_pending = ordered - shipped if shipped <= ordered else None
+                    if case["pendientes"] != expected_pending:
+                        arithmetic_errors.append(case["case_id"])
+        check(checks, "Aritmética de todas las líneas sin duplicados", [], arithmetic_errors)
+        check(checks, "Procedencia e integridad de todas las evidencias", [], provenance_errors)
+        check(checks, "Etiquetas coherentes en todos los registros", [], label_errors)
         return {"dataset": dataset, "passed": sum(c["pass"] for c in checks), "total": len(checks),
                 "checks": checks, "runs": [initial.__dict__, updated.__dict__, repeated.__dict__],
                 "changes": {"new_messages": updated.added_messages, "p26002_requested_date_before": before["requested_date"],

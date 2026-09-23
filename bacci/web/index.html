@@ -14,9 +14,9 @@
     <aside class="rail" aria-label="Navegación">
       <div class="brand"><svg class="brand-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 1.5v21M1.5 12h21M4.6 4.6l14.8 14.8M19.4 4.6 4.6 19.4"/></svg><span class="brand-wordmark"><span>Bacci</span><span>Operations</span></span></div>
       <nav class="rail-items" aria-label="Secciones">
-        <button class="rail-pill active" type="button" data-section="queue"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Trabajo diario</button>
-        <button class="rail-pill" type="button" data-section="unresolved"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 17h.01"/></svg>Sin resolver</button>
-        <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Control de cargas</button>
+        <button class="rail-pill active" type="button" data-section="queue" aria-pressed="true"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Trabajo diario</button>
+        <button class="rail-pill" type="button" data-section="unresolved" aria-pressed="false"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 17h.01"/></svg>Sin resolver</button>
+        <button class="rail-pill" type="button" data-section="runs" aria-pressed="false"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Control de cargas</button>
       </nav>
     </aside>
 
@@ -30,8 +30,8 @@
 
       <div id="queue-view">
         <nav id="section-nav" class="section-nav" aria-label="Vistas de trabajo">
-          <button class="tab active" type="button" data-view="all">Cola de trabajo</button>
-          <button class="tab" type="button" data-view="records">Todos los registros</button>
+          <button class="tab active" type="button" data-view="all" aria-pressed="true">Cola de trabajo</button>
+          <button class="tab" type="button" data-view="records" aria-pressed="false">Todos los registros</button>
           <span class="nav-explainer">Los casos más urgentes aparecen primero</span>
         </nav>
 
@@ -42,17 +42,18 @@
               <div class="filter-field"><label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido, SKU, correo, fecha…" autocomplete="off"></div>
               <div class="filter-field"><label for="client">Cliente</label><select id="client"><option value="">Todos</option></select></div>
               <div class="filter-field"><label for="priority">Prioridad</label><select id="priority"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
+              <div class="filter-field"><label for="review">Tipo</label><select id="review"><option value="">Todos</option><option value="human">Revisión humana</option></select></div>
             </div>
           </div>
           <div class="table-wrap"><table><thead><tr><th>Prioridad</th><th>Pedido y línea</th><th>Cliente</th><th class="numeric">Pendiente</th><th>Motivo</th><th>Acción propuesta</th></tr></thead><tbody id="case-rows"></tbody></table></div>
-          <div id="empty" class="empty" hidden>No hay casos con estos filtros. Prueba otra combinación de búsqueda, cliente y prioridad.</div>
+          <div id="empty" class="empty" hidden>No hay casos con estos filtros. Prueba otra combinación de búsqueda, cliente, prioridad y tipo.</div>
           <div class="table-bottom"><span id="range">—</span><div class="pagination"><button id="prev" type="button">Anterior</button><span id="page-label">—</span><button id="next" type="button">Siguiente</button></div></div>
         </section>
 
         <section id="detail" class="detail" aria-live="polite" aria-labelledby="detail-title">
           <div class="detail-head"><div><span class="detail-label">CASO SELECCIONADO</span><h2 id="detail-title">Selecciona un caso</h2><p id="detail-item">La evidencia aparecerá aquí.</p></div><span id="detail-state" class="state">—</span></div>
           <div class="detail-columns">
-            <div class="detail-facts"><div class="fact"><span>Fecha en ERP</span><strong id="detail-erp">—</strong></div><div class="fact"><span>Fecha solicitada</span><strong id="detail-request">—</strong></div><div class="fact"><span>Unidades pedidas</span><strong id="detail-ordered">—</strong></div><div class="fact"><span>Unidades enviadas (acumuladas)</span><strong id="detail-shipped">—</strong></div><div class="fact"><span>Por servir</span><strong id="detail-pending">—</strong></div></div>
+            <div class="detail-facts"><div class="fact"><span>Fecha en ERP</span><strong id="detail-erp">—</strong></div><div class="fact"><span id="detail-request-label">Fecha solicitada</span><strong id="detail-request">—</strong></div><div class="fact"><span>Unidades pedidas</span><strong id="detail-ordered">—</strong></div><div class="fact"><span>Unidades enviadas (acumuladas)</span><strong id="detail-shipped">—</strong></div><div class="fact"><span>Por servir</span><strong id="detail-pending">—</strong></div></div>
             <div class="detail-story"><h3>Qué sabemos</h3><p id="detail-reason">—</p><div id="detail-issues" class="issues"></div><div id="detail-source" class="source-evidence"></div><div id="detail-evidence" class="evidence"></div></div>
             <div class="detail-next"><span>SIGUIENTE PASO</span><strong id="detail-action">—</strong><p>El correo no confirma cambios en el ERP. Verifica antes de actuar.</p></div>
           </div>
@@ -67,8 +68,13 @@
           <div><dt>Repetidos</dt><dd>Mismo identificador y contenido; se ignoran para evitar duplicados.</dd></div>
           <div><dt>Conflictos</dt><dd>Identificador reutilizado con otro contenido o registro sin ID o fecha válidos; requieren revisión en el archivo de origen.</dd></div>
         </dl>
-        <div class="runs-table"><table><thead><tr><th>Ejecutado</th><th>Corte</th><th>Nuevos</th><th>Repetidos</th><th>Conflictos</th><th>Casos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody id="run-rows"></tbody></table></div>
+        <div class="runs-table"><table><thead><tr><th>Ejecutado</th><th>Corte</th><th>Nuevos</th><th>Repetidos</th><th>Conflictos</th><th>Casos</th><th>Cambios</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody id="run-rows"></tbody></table></div>
         <div id="run-comparison" class="run-comparison"></div>
+        <section id="run-impact" class="run-impact" aria-labelledby="impact-heading" hidden>
+          <div class="impact-head"><div><h3 id="impact-heading">Casos afectados</h3><p id="impact-context"></p></div><span id="impact-count" class="impact-count"></span></div>
+          <div id="impact-items" class="impact-items"></div>
+          <div class="impact-pagination"><button id="impact-prev" type="button">Anterior</button><span id="impact-page"></span><button id="impact-next" type="button">Siguiente</button></div>
+        </section>
       </section>
 
     </main>

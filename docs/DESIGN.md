@@ -20,5 +20,5 @@ La tabla principal concentra pedido/línea, cliente, unidades pendientes, motivo
 
 - La prioridad se expresa en texto y un punto discreto; el color no es la única señal.
 - Los filtros y la búsqueda se mantienen junto a la tabla. Las filas pueden seleccionarse con teclado.
-- En móvil, cada fila pasa a una ficha legible con todas las acciones visibles.
+- En móvil, cada fila pasa a una ficha de altura estable. El texto completo de la acción siempre está en el detalle del caso.
 - La vista de detalle nunca confunde solicitud por correo con dato ERP confirmado.

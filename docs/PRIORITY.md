@@ -13,18 +13,18 @@ Se aplica la **primera** condición verdadera de esta tabla, de arriba abajo. «
 | Orden | Condición | Prioridad | Rango |
 | ---: | --- | --- | ---: |
 | 1 | Solicitud de cancelación | Alta | 0 |
-| 2 | Fecha solicitada vigente para hoy o antes | Alta | 1 |
+| 2 | Alguna petición de fecha activa para hoy o antes, incluso si hay otras fechas por aclarar | Alta | 1 |
 | 3 | Contacto nuevo o remitente no coincidente por verificar | Alta | 2 |
 | 4 | Anomalía y pendiente desconocido | Alta | 3 |
 | 5 | Pendiente positivo y compromiso ERP anterior a hoy | Alta | 4 |
 | 6 | Pendiente positivo y compromiso ERP para hoy | Alta | 5 |
 | 7 | Petición de cambio de fecha vigente | Media | 10 |
-| 8 | Anomalía de origen o peticiones activas incompatibles | Media | 11 |
+| 8 | Anomalía de origen sin petición de fecha activa | Media | 11 |
 | 9 | Pendiente positivo y compromiso en los próximos dos días | Media | 12 |
 | 10 | Consulta de seguimiento | Media | 13 |
 | 11 | Ninguna condición anterior | Baja | 20 |
 
-La anomalía abarca filas contradictorias, cantidades inválidas o sobreexpedidas, fecha de compromiso desconocida, cliente ausente del maestro, contacto por verificar y varias peticiones sin rectificación explícita. Una fecha vacía es desconocida; no se considera vencida. Entre casos del mismo rango se ordena primero la fecha ERP conocida más temprana, después el correo más reciente y por último el identificador estable. El motivo y la acción siguen esta misma precedencia; `Servido` muestra «Línea servida sin incidencia» y ninguna acción.
+La anomalía abarca filas contradictorias, cantidades inválidas o sobreexpedidas, fecha de compromiso desconocida, cliente ausente del maestro, contacto por verificar y varias peticiones sin rectificación explícita. Si esas peticiones tienen fechas incompatibles, ninguna se elige como vigente por orden de llegada: el detalle muestra ambas y la acción exige aclararlas. Una fecha vacía es desconocida; no se considera vencida. Entre casos del mismo rango se ordena primero la fecha ERP conocida más temprana, después el correo más reciente y por último el identificador estable. El motivo y la acción siguen esta misma precedencia; `Servido` muestra «Línea servida sin incidencia» y ninguna acción.
 
 Los correos sin correspondencia que solicitan cancelación o cambio de fecha son `Alta` con rango 2. El resto son `Media` con rango 13. Su acción siempre es investigar la referencia y asociarla únicamente tras verificación humana.
 

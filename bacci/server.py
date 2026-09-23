@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from .core import UPDATE_CUTOFF, get_case, list_cases, recent_runs, run_import, summary
+from .core import UPDATE_CUTOFF, get_case, get_run_changes, list_cases, recent_runs, run_import, summary
 
 WEB = Path(__file__).resolve().parent / "web"
 UPDATE_LOCK = threading.Lock()
@@ -39,10 +39,16 @@ def handler_factory(db: Path, orders: Path, update_mail: Path):
                     self._json(200, summary(db))
                 elif parsed.path == "/api/runs":
                     self._json(200, recent_runs(db))
+                elif parsed.path.startswith("/api/runs/") and parsed.path.endswith("/changes"):
+                    run_id = int(parsed.path.removeprefix("/api/runs/").removesuffix("/changes"))
+                    page = max(1, int(query.get("page", ["1"])[0]))
+                    changes = get_run_changes(db, run_id, page=page)
+                    self._json(200 if changes else 404, changes if changes else {"error": "Carga no encontrada"})
                 elif parsed.path == "/api/cases":
                     page = max(1, int(query.get("page", ["1"])[0]))
                     self._json(200, list_cases(db, client=query.get("client", [""])[0] or None,
                                                priority=query.get("priority", [""])[0] or None,
+                                               review=query.get("review", [""])[0] == "human",
                                                view=query.get("view", ["all"])[0],
                                                search=query.get("search", [""])[0], page=page))
                 elif parsed.path.startswith("/api/cases/"):

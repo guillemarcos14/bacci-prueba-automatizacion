@@ -56,7 +56,7 @@ El alcance es un **prototipo local**. Herramientas libres. Puedes usar IA explic
 
 ![Vista de la cola operativa](docs/screenshots/desktop.png)
 
-La [demostración narrada de la iteración anterior](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v4/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 42 s. Se grabará el vídeo final cuando termine la revisión de la plataforma. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
+La [demostración narrada de la iteración anterior](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v4/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 42 s. Se grabará el vídeo final tras esta revisión. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola y [Control de cargas](docs/screenshots/control-cargas.png) muestra el efecto del lote de las 11:00.
 
 ## Ejecutar en local
 
@@ -68,9 +68,9 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m bacci serve
 ```
 
-Abre `http://127.0.0.1:8765`. La aplicación usa **siempre el conjunto completo**. La primera ejecución crea `data/operations.sqlite`, incorpora el lote de actualización y deja la vista en el corte de las 11:00; puede tardar unos 25 segundos. Esta base de la aplicación está separada de las bases usadas por los comandos de prueba. El servidor solo escucha en `127.0.0.1`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
+Abre `http://127.0.0.1:8765`. La aplicación usa **siempre el conjunto completo**. La primera ejecución crea `data/operations.sqlite`, incorpora el lote de actualización y deja la vista en el corte de las 11:00; en esta máquina las dos cargas tardaron alrededor de 30 segundos. Esta base de la aplicación está separada de las bases usadas por los comandos de prueba. El servidor solo escucha en `127.0.0.1`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
 
-La cola muestra todos los casos activos, ordenados por urgencia. Para ver solo los de prioridad alta se usa el filtro **Prioridad → Alta**. La búsqueda recorre los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. Ignora mayúsculas y tildes, admite fechas `dd/mm/aaaa` e ISO y exige que coincidan todas las palabras escritas. Los términos `alta`, `media` y `baja` buscan la prioridad de casos activos; `servido` busca solo líneas servidas. Al escribir abre **Todos los registros**. Los filtros de cliente y prioridad siguen aplicándose si están seleccionados. «Sin resolver» existe solo en el menú lateral y muestra correos sin vínculo fiable. «Control de cargas» registra cada procesamiento, permite repetir el lote y comparar novedades, reentregas, tiempo y huella del resultado.
+La cola muestra todos los casos activos, ordenados por urgencia. Para ver solo los de prioridad alta se usa el filtro **Prioridad → Alta**; **Tipo → Revisión humana** aísla los casos con anomalías o identidad dudosa y se combina con cliente, prioridad y búsqueda. La búsqueda recorre los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. Ignora mayúsculas y tildes, admite fechas `dd/mm/aaaa` e ISO y exige que coincidan todas las palabras escritas. Los términos `alta`, `media` y `baja` buscan la prioridad de casos activos; `servido` busca solo líneas servidas. Al escribir abre **Todos los registros**. «Sin resolver» existe solo en el menú lateral y muestra correos sin vínculo fiable. «Control de cargas» registra cada procesamiento, permite repetir el lote y comparar novedades, reentregas, tiempo y huella del resultado. La columna **Cambios** abre los casos afectados por cada carga, con sus valores antes y después y un enlace al caso actual. Las cargas guardadas antes de esta función no tienen comparación retrospectiva.
 
 ## Reproducir la prueba paso a paso
 
@@ -100,9 +100,14 @@ Repite con `--dataset full` para el proceso manual completo. El arnés siempre c
 | Casos operativos tras el lote | 90 | 17.423 |
 | Casos sin resolver | 2 | 569 |
 | Registros consultables, incluidas líneas servidas | 100 | 19.969 |
-| Validaciones del arnés | 25/25 | 25/25 |
+| Casos que cambian a las 11:00 | 2 | 2 |
+| Casos que cambian al repetir | 0 | 0 |
+| Revisión humana | 7 | 767 |
+| Validaciones del arnés | 38/38 | 38/38 |
 
-La última duración medida de cada ejecución consta en [`reports/validation.json`](reports/validation.json) y se resume en [`reports/VALIDATION.md`](reports/VALIDATION.md): **0,10/0,08/0,08 s** con la muestra y **12,08/11,92/11,54 s** con el conjunto completo para inicial/actualización/repetición. Se mide de nuevo en cada máquina, sin presentarla como garantía de producción. En la actualización, la petición vigente de P-26002 pasa del 12/09 al 13/09; el acuse posterior no la cambia. La segunda pasada conserva el mismo `output_sha256` y los correos anteriores. El ERP sigue indicando su fecha original. La prioridad y sus motivos se detallan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
+La duración medida de cada ejecución consta en [`reports/validation.json`](reports/validation.json) y se resume en [`reports/VALIDATION.md`](reports/VALIDATION.md). Se mide de nuevo en cada máquina, sin presentarla como garantía de producción. En la actualización, la petición vigente de P-26002 pasa del 12/09 al 13/09; el acuse posterior no la cambia. La segunda pasada conserva el mismo `output_sha256` y los correos anteriores. El ERP sigue indicando su fecha original. La prioridad y sus motivos se detallan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
+
+Los **cortes de las 10:00 y las 11:00** son dos fotografías del mismo ejercicio, ambas del **10/09/2026, hora de Madrid**. A las 10:00 se cargan los pedidos y los correos iniciales disponibles hasta entonces. A las 11:00 se mantienen esos pedidos y correos y se incorpora `Correos_actualizacion.xlsx`: tres mensajes nuevos y dos reentregas. Cambian dos casos: P-26002 recibe una rectificación de fecha solicitada y P-26004 un seguimiento; el ERP no se modifica. Reprocesar el lote de las 11:00 añade cero mensajes y cambia cero casos. Estas horas son límites temporales de la prueba, no plazos de entrega de los pedidos.
 
 ### Qué cuenta cada vista
 
@@ -112,7 +117,7 @@ Las 20.000 filas de pedidos del XLSX representan 19.400 líneas únicas identifi
 
 Cada ejecución registra el corte, número de casos, tiempo y huella del resultado. **Nuevos** cuenta ID de mensaje válidos no vistos antes. **Repetidos** cuenta ID ya vistos cuyo contenido es idéntico; no vuelven a entrar. **Conflictos** cuenta ID existentes con contenido diferente y registros con ID o fecha de recepción inválidos; requieren revisión. Las cifras pertenecen al lote de esa fila, no son acumulados. En el lote entregado hay 3 nuevos y 2 repetidos; al repetirlo hay 0 nuevos y 5 repetidos. En un uso real, el responsable de operaciones podría detectar cortes incompletos o retrasados, mientras soporte investigaría conflictos y cambios inesperados de la huella. Este prototipo solo procesa los XLSX locales.
 
-Las filas idénticas se consolidan. Si dos filas de la misma línea discrepan, no se elige una arbitrariamente; las cantidades contradictorias o sobreexpedidas dejan el pendiente como desconocido y abren revisión. Las fechas vacías son desconocidas. Un correo sin referencia fiable genera un caso sin resolver. Las sugerencias por SKU nunca se vinculan automáticamente. Un contacto nuevo o remitente no coincidente requiere verificar identidad. Ninguna solicitud modifica el ERP por sí sola. La regla exacta y la precedencia de las seis etiquetas del detalle constan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
+Las filas idénticas se consolidan. Si dos filas de la misma línea discrepan, no se elige una arbitrariamente; las cantidades contradictorias o sobreexpedidas dejan el pendiente como desconocido y abren revisión. Las fechas vacías son desconocidas. Si dos peticiones activas indican fechas distintas sin rectificación explícita, se muestran ambas y se pide aclaración: el correo más reciente no prevalece automáticamente. Un correo sin referencia fiable genera un caso sin resolver. Las sugerencias por SKU nunca se vinculan automáticamente. Un contacto nuevo o remitente no coincidente requiere verificar identidad. Ninguna solicitud modifica el ERP por sí sola. La regla exacta y la precedencia de las seis etiquetas del detalle constan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
 
 ## Procedencia de lo mostrado
 
