@@ -11,3 +11,5 @@ La aplicación no accede a Navision ni Outlook reales y no envía correos. Las d
 La aplicación usa `data/operations.sqlite` para mantener su historial de cargas separado de los ensayos por CLI. El historial visible se inicializó limpiamente desde los XLSX originales; los ensayos previos en `data/full.sqlite` se conservaron localmente.
 
 **Revisión de comprensión, 23/09/2026.** Retirados los dos textos de marco solicitados. Control de cargas define sus tres contadores por lote. El filtro de prioridad se limita a casos activos para excluir «Servido». Se deja el vídeo `demo-v4` como material de la iteración anterior; se grabará uno final cuando la plataforma quede cerrada.
+
+**Revisión de escritorio y semántica, 23/09/2026.** Márgenes ampliados, radio de cabecera igualado a la fila seleccionada y acciones completas visibles en tabla. Búsqueda de prioridad y estado separada, palabras combinables con datos de origen, tildes y fechas. Etiquetas del detalle centralizadas en el motor y documentadas con precedencia exacta. Auditoría y propuestas en `docs/AUDIT.md`. El vídeo anterior permanece intacto; no se genera ni publica otro en esta iteración.

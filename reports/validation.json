@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T14:28:10",
+  "generated_at": "2026-09-23T16:42:46",
   "results": [
     {
       "dataset": "sample",
@@ -44,8 +44,8 @@
         },
         {
           "check": "Digest estable tras repetición",
-          "expected": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
-          "actual": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
+          "expected": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
+          "actual": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
           "pass": true
         },
         {
@@ -139,8 +139,8 @@
           "total_cases": 90,
           "attention_cases": 90,
           "unresolved_cases": 2,
-          "output_sha256": "3999816788cbf3ebd4c21e0f54a06583321cd20f0eabc9d04cdb4fe9ed3dd4c2",
-          "elapsed_ms": 85.57
+          "output_sha256": "01847fed2e92358bb7fbd3f0031168c40df1d4e36b5b4d87c37d9b712d797510",
+          "elapsed_ms": 95.75
         },
         {
           "run_id": 2,
@@ -153,8 +153,8 @@
           "total_cases": 90,
           "attention_cases": 90,
           "unresolved_cases": 2,
-          "output_sha256": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
-          "elapsed_ms": 62.77
+          "output_sha256": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
+          "elapsed_ms": 68.94
         },
         {
           "run_id": 3,
@@ -167,8 +167,8 @@
           "total_cases": 90,
           "attention_cases": 90,
           "unresolved_cases": 2,
-          "output_sha256": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
-          "elapsed_ms": 62.13
+          "output_sha256": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
+          "elapsed_ms": 70.5
         }
       ],
       "changes": {
@@ -221,8 +221,8 @@
         },
         {
           "check": "Digest estable tras repetición",
-          "expected": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
-          "actual": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
+          "expected": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
+          "actual": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
           "pass": true
         },
         {
@@ -316,8 +316,8 @@
           "total_cases": 17423,
           "attention_cases": 17423,
           "unresolved_cases": 569,
-          "output_sha256": "b0e0fc7a07483e337030aa8b605a6c8ac63782dd9deea8a01737cac80fdef140",
-          "elapsed_ms": 10729.73
+          "output_sha256": "4dcc9374855555e1f86923a34a56a8451debc25bd38ac00f39b4730099079a0c",
+          "elapsed_ms": 14523.57
         },
         {
           "run_id": 2,
@@ -330,8 +330,8 @@
           "total_cases": 17423,
           "attention_cases": 17423,
           "unresolved_cases": 569,
-          "output_sha256": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
-          "elapsed_ms": 10996.91
+          "output_sha256": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
+          "elapsed_ms": 14804.97
         },
         {
           "run_id": 3,
@@ -344,8 +344,8 @@
           "total_cases": 17423,
           "attention_cases": 17423,
           "unresolved_cases": 569,
-          "output_sha256": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
-          "elapsed_ms": 10996.6
+          "output_sha256": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
+          "elapsed_ms": 13974.36
         }
       ],
       "changes": {

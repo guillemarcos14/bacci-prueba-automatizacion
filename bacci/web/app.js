@@ -62,7 +62,7 @@ async function loadDetail(id){
   if(id!==state.selected)return;
   $('detail-title').textContent=data.order_id ? `${data.order_id}${data.line_id?' · línea '+data.line_id:''}` : `Correo ${data.emails?.[0]?.message_id||''}`;
   $('detail-item').textContent=[data.cliente,data.sku,data.color,data.talla].filter(Boolean).join(' · ');
-  $('detail-state').textContent=!data.attention?'Servido':data.unresolved?'Sin correspondencia':data.issues?.some(x=>x.includes('verificar')||x.includes('contradictorios'))?'Revisión humana':data.requested_date?'Solicitud sin confirmar':data.priority==='Alta'?'Atención prioritaria':'Pendiente';
+  $('detail-state').textContent=data.label;
   $('detail-erp').textContent=formatDate(data.fecha_compromiso);
   $('detail-request').textContent=data.requested_date?formatDate(data.requested_date):'Sin cambio solicitado';
   $('detail-pending').textContent=data.pendientes===null?'Desconocido':`${number(data.pendientes)} de ${number(data.uds_pedidas)} ud.`;

@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-from bacci.core import (INITIAL_CUTOFF, UPDATE_CUTOFF, build_lines, classify_email,
+from bacci.core import (INITIAL_CUTOFF, UPDATE_CUTOFF, build_lines, case_label, classify_email,
                         extract_references, get_case, list_cases, load_sheet, run_import)
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -48,6 +48,22 @@ class SourceAndCalculationTests(unittest.TestCase):
         self.assertEqual(classify_email("Estado", "No solicitamos cambiar la fecha; decidnos el estado.")[0], "seguimiento")
         self.assertEqual(classify_email("Rectificación", "Rectifico mi correo msg-002. Solicitamos el 13/09/2026 en lugar del 12/09/2026."),
                          ("cambio_fecha", "2026-09-13", "msg-002"))
+
+    def test_detail_label_precedence(self):
+        case = {"attention": True, "unresolved": False, "issues": [], "request_count": 0,
+                "priority": "Alta"}
+        self.assertEqual(case_label(case), "Atención prioritaria")
+        case["request_count"] = 1
+        self.assertEqual(case_label(case), "Solicitud sin confirmar")
+        case["issues"] = ["cliente no encontrado en el maestro"]
+        self.assertEqual(case_label(case), "Revisión humana")
+        case["unresolved"] = True
+        self.assertEqual(case_label(case), "Sin correspondencia")
+        case["attention"] = False
+        self.assertEqual(case_label(case), "Servido")
+        case.update(attention=True, unresolved=False, issues=["duplicado idéntico consolidado"],
+                    request_count=0, priority="Media")
+        self.assertEqual(case_label(case), "Pendiente")
 
 
 class UpdateSequenceTests(unittest.TestCase):
@@ -105,6 +121,41 @@ class UpdateSequenceTests(unittest.TestCase):
                                   if str(row["cliente_id"]) == after["cliente_id"])
             self.assertIn("line:P-26002:10000", {item["case_id"] for item in
                 list_cases(db, search=customer_email, page_size=100)["items"]})
+
+            # Los términos de estado y prioridad se interpretan según lo visible.
+            low = list_cases(db, view="records", search="  BAJA  ", page_size=100)
+            self.assertGreater(low["total"], 0)
+            self.assertTrue(all(item["attention"] and item["priority"] == "Baja" for item in low["items"]))
+            served = list_cases(db, view="records", search="servido", page_size=100)
+            self.assertEqual(served["total"], 10)
+            self.assertTrue(all(not item["attention"] for item in served["items"]))
+            self.assertEqual(list_cases(db, view="records", search="servido", priority="Baja")["total"], 0)
+            self.assertEqual(list_cases(db, view="records", search="baja", priority="Alta")["total"], 0)
+            self.assertIn(served_id, {item["case_id"] for item in
+                list_cases(db, view="records", search=f"servido {served_order}", page_size=100)["items"]})
+            self.assertEqual(get_case(db, served_id)["label"], "Servido")
+            self.assertEqual(get_case(db, "email:msg-007")["label"], "Sin correspondencia")
+            self.assertEqual(get_case(db, "line:P-26009:10000")["label"], "Revisión humana")
+            self.assertEqual(after["label"], "Solicitud sin confirmar")
+
+            # Consulta libre sobre las columnas importadas y fechas en ambos formatos.
+            source = after["source_rows"][0]
+            for term in (after["order_id"].lower(), str(after["line_id"]), source["sku"].lower(),
+                         source["color"], source["talla"], str(source["uds_pedidas"]),
+                         after["fecha_compromiso"],
+                         datetime.fromisoformat(after["fecha_compromiso"]).strftime("%d/%m/%Y"),
+                         customer_email.upper(), "RECTIFICO MI CORREO"):
+                with self.subTest(term=term):
+                    self.assertIn(after["case_id"], {item["case_id"] for item in
+                        list_cases(db, view="records", search=term, page_size=100)["items"]})
+            self.assertIn(after["case_id"], {item["case_id"] for item in
+                list_cases(db, view="records", search=f"{after['order_id']} {source['sku']}", page_size=100)["items"]})
+            self.assertIn(after["case_id"], {item["case_id"] for item in
+                list_cases(db, view="records", search=after["order_id"], client=after["cliente_id"],
+                           priority=after["priority"], page_size=100)["items"]})
+            self.assertIn("line:P-26006:10000", {item["case_id"] for item in
+                list_cases(db, view="records", search="ÁLAMEDA p-26006", page_size=100)["items"]})
+            self.assertEqual(list_cases(db, view="records", search="%_")["total"], 0)
 
 
 if __name__ == "__main__":

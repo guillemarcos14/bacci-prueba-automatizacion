@@ -64,6 +64,32 @@ def search_text(value: Any) -> str:
     return fold(str(value)) if value is not None else ""
 
 
+def case_label(case: dict[str, Any]) -> str:
+    """Estado visible del detalle; la prioridad solo ordena los casos activos."""
+    if not case["attention"]:
+        return "Servido"
+    if case["unresolved"]:
+        return "Sin correspondencia"
+    if any(issue not in ("duplicado idéntico consolidado",) for issue in case["issues"]):
+        return "Revisión humana"
+    if case.get("request_count"):
+        return "Solicitud sin confirmar"
+    if case["priority"] == "Alta":
+        return "Atención prioritaria"
+    return "Pendiente"
+
+
+def case_search_text(case: dict[str, Any], customer_email: str) -> str:
+    # La prioridad interna de una línea servida no forma parte de su estado visible.
+    internal = {"case_id", "kind", "priority", "priority_rank", "attention", "unresolved",
+                "overdue", "due_today", "request_count", "request_conflict", "sort_time"}
+    source = {key: value for key, value in case.items() if key not in internal}
+    dates = [date.fromisoformat(value).strftime("%d/%m/%Y") for value in
+             (case.get("fecha_compromiso"), case.get("requested_date")) if value]
+    return search_text((source, customer_email, dates, case_label(case),
+                        case["priority"] if case["attention"] else ""))
+
+
 def load_sheet(path: Path, sheet: str) -> list[dict[str, Any]]:
     workbook = load_workbook(path, read_only=True, data_only=True)
     try:
@@ -356,24 +382,24 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
         attention = bool(pending is None or pending > 0 or cancellation or has_request or has_anomaly or followup)
         if cancellation:
             reason, action = "Solicitud de cancelación", "Comprobar expedición y validar la cancelación antes de cambiar el ERP"
+        elif urgent_request:
+            reason, action = "Adelanto solicitado para hoy", "Comprobar stock y logística antes de confirmar una fecha"
         elif changed_contact:
             reason, action = "Contacto por verificar", "Verificar autorización por un canal conocido antes de responder o cambiar el ERP"
         elif pending is None:
             reason, action = "Datos del ERP contradictorios", "Revisar la línea en Navision antes de calcular o prometer unidades"
-        elif urgent_request:
-            reason, action = "Adelanto solicitado para hoy", "Comprobar stock y logística antes de confirmar una fecha"
         elif overdue:
             reason, action = "Compromiso vencido", "Verificar expedición y comunicar un estado contrastado"
-        elif has_request:
-            reason, action = "Cambio de fecha solicitado", "Comprobar viabilidad, confirmar y registrar el cambio aprobado en el ERP"
-        elif followup:
-            reason, action = "Consulta de estado", "Comprobar expedición y responder con unidades pendientes verificadas"
-        elif has_anomaly:
-            reason, action = "Dato incompleto", "Revisar el origen antes de tomar una decisión"
         elif due_today:
             reason, action = "Compromiso para hoy", "Comprobar salida de mercancía"
+        elif has_request:
+            reason, action = "Cambio de fecha solicitado", "Comprobar viabilidad, confirmar y registrar el cambio aprobado en el ERP"
+        elif has_anomaly:
+            reason, action = "Dato incompleto", "Revisar el origen antes de tomar una decisión"
         elif due_soon:
             reason, action = "Compromiso próximo", "Preparar la expedición y confirmar disponibilidad"
+        elif followup:
+            reason, action = "Consulta de estado", "Comprobar expedición y responder con unidades pendientes verificadas"
         else:
             reason, action = "Unidades pendientes", "Planificar la siguiente expedición"
         if not attention:
@@ -381,6 +407,7 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
         line.update({"priority": priority, "priority_rank": rank, "attention": attention,
                      "unresolved": False, "reason": reason, "action": action, "overdue": overdue,
                      "due_today": due_today, "request_count": len(requests), "sort_time": emails[-1]["received_at"] if emails else None})
+        line["label"] = case_label(line)
         if attention or include_inactive:
             cases.append(line)
     for item in unresolved:
@@ -389,6 +416,7 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
                      "attention": True, "unresolved": True, "reason": item["issues"][0],
                      "action": "Investigar la referencia y asociar solo tras verificación humana",
                      "sort_time": item["emails"][0]["received_at"]})
+        item["label"] = case_label(item)
         cases.append(item)
     return sorted(cases, key=_sort_case)
 
@@ -457,7 +485,7 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
                 (c["case_id"], c["kind"], c.get("order_id"), c.get("line_id"), c.get("cliente_id"), c.get("cliente"),
                  c["priority"], c["priority_rank"], c.get("fecha_compromiso"), c.get("pendientes"), c["reason"],
                  c["action"], int(c["attention"]), int(c["unresolved"]), c.get("sort_time"), canonical_json(c),
-                 search_text((c, customer_emails.get(c.get("cliente_id"), "")))) for c in all_cases
+                 case_search_text(c, customer_emails.get(c.get("cliente_id"), ""))) for c in all_cases
             ])
             output_sha = digest(cases)
             active_count = sum(m["received_at"] <= as_of.isoformat(timespec="minutes") for m in messages)
@@ -469,7 +497,7 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
                repeated, conflicting, active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases),
                output_sha, elapsed, datetime.now().isoformat(timespec="seconds")))
             run_id = cursor.lastrowid
-            connection.execute("PRAGMA user_version=2")
+            connection.execute("PRAGMA user_version=3")
         return RunResult(run_id, dataset, as_of.isoformat(timespec="minutes"), added, repeated, conflicting,
                          active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases), output_sha, elapsed)
     finally:
@@ -507,9 +535,17 @@ def list_cases(db_path: Path, *, client: str | None = None, priority: str | None
         elif view == "high":
             clauses.append("priority='Alta'")
         if search.strip():
-            clauses.append("search_text LIKE ? ESCAPE '\\'")
-            term = fold(search.strip()).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-            params.append(f"%{term}%")
+            terms = fold(search.strip()).split()
+            for term in terms:
+                if term in ("alta", "media", "baja"):
+                    clauses.extend(("attention=1", "priority=?"))
+                    params.append(term.capitalize())
+                elif term in ("servido", "servida"):
+                    clauses.append("attention=0")
+                else:
+                    clauses.append("search_text LIKE ? ESCAPE '\\'")
+                    escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                    params.append(f"%{escaped}%")
         where = " AND ".join(clauses) if clauses else "1=1"
         total = connection.execute(f"SELECT COUNT(*) FROM cases WHERE {where}", params).fetchone()[0]
         rows = connection.execute(f"""SELECT case_id,kind,order_id,line_id,client_id,client_name,priority,

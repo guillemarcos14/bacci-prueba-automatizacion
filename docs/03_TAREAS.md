@@ -13,4 +13,8 @@
 | Hecha | Fijar datos completos y eliminar navegación duplicada | Servidor full, «Alta» como filtro, «Sin resolver» solo lateral |
 | Hecha | Auditar procedencia de `msg-13756` | Fila 2622 de `Correos_full.xlsx`; pedido ausente de `Pedidos_full.xlsx` |
 | Hecha | Aclarar vistas, cargas y prioridad «Servido» | README, ayuda en pantalla y filtro Baja sin líneas servidas |
+| Hecha | Ampliar márgenes y reducir radio de cabecera | Estilos de escritorio comprobados en navegador; cabecera y selección a 8 px |
+| Hecha | Unificar etiquetas, motivo y precedencia | `case_label`, `docs/PRIORITY.md` y pruebas de las seis categorías |
+| Hecha | Reparar y probar búsqueda libre | Prioridad/estado separados; palabras, números, fechas, tildes, CSV y filtros en tests y navegador |
+| Hecha | Auditar aplicación completa | Correcciones y propuestas priorizadas en `docs/AUDIT.md` |
 | Pendiente | Grabar el vídeo final tras cerrar la plataforma | Petición expresa de Guillem: conservar de momento `demo-v4` |

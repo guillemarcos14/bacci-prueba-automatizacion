@@ -20,3 +20,6 @@
 | 23/09/2026 | Separar `operations.sqlite` de la base usada por ensayos CLI | Evita que ejecuciones de desarrollo con reglas anteriores contaminen el historial operativo visible; conserva esas pruebas para auditoría local. |
 | 23/09/2026 | Aplicar el filtro de prioridad solo a casos activos | «Servido» es un estado de línea, no prioridad baja; evita mezclar trabajo terminado con la cola. |
 | 23/09/2026 | Retirar textos de marco y explicar los conteos por lote en Control de cargas | Reduce ruido y hace legible el valor de nuevos, repetidos y conflictos. |
+| 23/09/2026 | Calcular la etiqueta del caso en el motor y aplicar una precedencia explícita | Evita que el detalle contradiga la prioridad, el motivo o las anomalías; la regla está en `docs/PRIORITY.md`. |
+| 23/09/2026 | Interpretar `alta`, `media`, `baja` y `servido` como términos semánticos de búsqueda | Impide que la prioridad interna de una línea servida aparezca como `Baja`; las demás palabras se buscan en datos y evidencia. |
+| 23/09/2026 | Permitir el ajuste natural de las celdas de cliente, motivo y acción en escritorio | Mantiene visible la acción propuesta sin reducir el margen exterior solicitado. |
