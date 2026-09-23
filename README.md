@@ -56,7 +56,7 @@ El alcance es un **prototipo local**. Herramientas libres. Puedes usar IA explic
 
 ![Vista de la cola operativa](docs/screenshots/desktop.png)
 
-La [demostración narrada](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v2/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 40 s. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
+La [demostración narrada](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v3/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 40 s. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
 
 ## Ejecutar en local
 
@@ -70,7 +70,7 @@ python -m venv .venv
 
 Abre `http://127.0.0.1:8765`. La primera ejecución crea una base SQLite local con la muestra, incorpora el lote de actualización y deja la vista en el corte de las 11:00. El servidor solo escucha en `127.0.0.1`. En el selector **Datos** puedes pasar de *Muestra* a *Conjunto completo* sin reiniciar; la primera carga completa puede tardar unos 20 segundos y usa una base independiente. También puedes iniciar directamente con `--dataset full`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
 
-La cola permite buscar en los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. La búsqueda ignora mayúsculas y tildes; se combina con cliente, prioridad y vista. La vista **Todos los registros** también incluye líneas ya servidas. Puedes navegar por páginas, abrir el detalle y ver correos y filas del ERP que justifican cada caso. «Sin resolver» muestra referencias no vinculadas. «Ejecuciones» permite repetir el lote local y comparar mensajes nuevos, reentregas ignoradas, tiempo y hash del resultado.
+La cola permite buscar en los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. La búsqueda ignora mayúsculas y tildes; al escribir cambia a **Todos los registros** para incluir líneas ya servidas. Los filtros de cliente y prioridad siguen aplicándose si están seleccionados. Puedes navegar por páginas, abrir el detalle y ver correos y filas del ERP que justifican cada caso. «Sin resolver» muestra referencias no vinculadas. «Ejecuciones» permite repetir el lote local y comparar mensajes nuevos, reentregas ignoradas, tiempo y hash del resultado.
 
 ## Reproducir la prueba paso a paso
 

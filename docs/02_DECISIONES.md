@@ -13,3 +13,4 @@
 | 23/09/2026 | Selector de muestra y conjunto completo dentro de la app, con bases separadas | Hace visible el alcance real sin pedir que operaciones reinicie el servidor. |
 | 23/09/2026 | Guardar líneas servidas como registros consultables, fuera de la cola operativa | La cola sigue enfocada en acciones, mientras la búsqueda puede encontrar cualquier línea importada. |
 | 23/09/2026 | Indexar valores de pedido, maestro y correos sin tildes ni distinción de mayúsculas | Permite buscar SKU, fechas, unidades, direcciones y texto, además de pedido o cliente. |
+| 23/09/2026 | Al iniciar una búsqueda, abrir «Todos los registros» automáticamente | Evita que una línea servida quede oculta por el filtro implícito de la cola. |

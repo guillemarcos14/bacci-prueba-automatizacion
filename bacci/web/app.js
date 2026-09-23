@@ -98,6 +98,7 @@ async function showSection(section){
   await showView(state.view,true);
 }
 async function showView(view,fromSection=false){state.view=view;state.page=1;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+  if(view!=='records')$('search').value='';
   if(!fromSection){state.section='queue';document.querySelectorAll('.rail-pill').forEach(x=>x.classList.toggle('active',x.dataset.section==='queue'))}
   $('queue-description').textContent=view==='records'?'Todas las líneas de pedido y los correos sin correspondencia, incluso si ya no requieren atención.':view==='unresolved'?'Correos que requieren una asociación manual antes de actuar.':view==='high'?'Casos que necesitan atención prioritaria.':'Selecciona un caso para ver su justificación y siguiente paso.';
   await loadCases();}
@@ -138,7 +139,9 @@ function wire(){
   document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>showView(x.dataset.view).catch(e=>notice(e.message,true))));
   for(const id of ['client','priority'])$(id).addEventListener('change',()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))});
   $('dataset').addEventListener('change',changeDataset);
-  $('search').addEventListener('input',()=>{clearTimeout(state.searchTimer);state.searchTimer=setTimeout(()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))},250)});
+  $('search').addEventListener('input',()=>{clearTimeout(state.searchTimer);
+    if($('search').value.trim() && state.view!=='records'){showView('records').catch(e=>notice(e.message,true));return}
+    state.searchTimer=setTimeout(()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))},250)});
   $('prev').addEventListener('click',()=>{state.page--;loadCases().catch(e=>notice(e.message,true))});
   $('next').addEventListener('click',()=>{state.page++;loadCases().catch(e=>notice(e.message,true))});
   $('update-button').addEventListener('click',incorporateUpdate);
