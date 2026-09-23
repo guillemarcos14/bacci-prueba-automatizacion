@@ -56,7 +56,7 @@ El alcance es un **prototipo local**. Herramientas libres. Puedes usar IA explic
 
 ![Vista de la cola operativa](docs/screenshots/desktop.png)
 
-La [demostración narrada](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v3/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 40 s. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
+La [demostración narrada](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v4/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 42 s. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
 
 ## Ejecutar en local
 
@@ -65,12 +65,12 @@ Requiere Python 3.10 o posterior. Desde la raíz del repositorio:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m bacci serve --dataset sample
+.\.venv\Scripts\python.exe -m bacci serve
 ```
 
-Abre `http://127.0.0.1:8765`. La primera ejecución crea una base SQLite local con la muestra, incorpora el lote de actualización y deja la vista en el corte de las 11:00. El servidor solo escucha en `127.0.0.1`. En el selector **Datos** puedes pasar de *Muestra* a *Conjunto completo* sin reiniciar; la primera carga completa puede tardar unos 20 segundos y usa una base independiente. También puedes iniciar directamente con `--dataset full`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
+Abre `http://127.0.0.1:8765`. La aplicación usa **siempre el conjunto completo**. La primera ejecución crea `data/operations.sqlite`, incorpora el lote de actualización y deja la vista en el corte de las 11:00; puede tardar unos 20 segundos. Esta base de la aplicación está separada de las bases usadas por los comandos de prueba. El servidor solo escucha en `127.0.0.1`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
 
-La cola permite buscar en los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. La búsqueda ignora mayúsculas y tildes; al escribir cambia a **Todos los registros** para incluir líneas ya servidas. Los filtros de cliente y prioridad siguen aplicándose si están seleccionados. Puedes navegar por páginas, abrir el detalle y ver correos y filas del ERP que justifican cada caso. «Sin resolver» muestra referencias no vinculadas. «Ejecuciones» permite repetir el lote local y comparar mensajes nuevos, reentregas ignoradas, tiempo y hash del resultado.
+La cola muestra todos los casos activos, ordenados por urgencia. Para ver solo los de prioridad alta se usa el filtro **Prioridad → Alta**. La búsqueda recorre los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. Ignora mayúsculas y tildes; al escribir abre **Todos los registros** para incluir líneas ya servidas. Los filtros de cliente y prioridad siguen aplicándose si están seleccionados. «Sin resolver» existe solo en el menú lateral y muestra correos sin vínculo fiable. «Control de cargas» registra cada procesamiento, permite repetir el lote y comparar novedades, reentregas, tiempo y huella del resultado.
 
 ## Reproducir la prueba paso a paso
 
@@ -85,7 +85,7 @@ python -m unittest discover -s tests -v
 python tools/harness.py --dataset both --output reports/validation.json
 ```
 
-Repite con `--dataset full` para el proceso manual completo. El arnés siempre crea bases temporales nuevas y deja `reports/validation.json` con resultados esperados frente a obtenidos, hashes y tiempos de ambos tamaños. También puedes ejecutar `python -m bacci demo --dataset sample` en una base que aún no exista.
+Repite con `--dataset full` para el proceso manual completo. El arnés siempre crea bases temporales nuevas y deja `reports/validation.json` con resultados esperados frente a obtenidos, hashes y tiempos de ambos tamaños. También puedes ejecutar `python -m bacci demo --dataset sample` en una base que aún no exista. La muestra queda reservada a CLI, pruebas y validación; nunca se ofrece en la interfaz.
 
 ## Resultados y decisiones
 
@@ -105,6 +105,12 @@ Repite con `--dataset full` para el proceso manual completo. El arnés siempre c
 La última duración medida de cada ejecución consta en [`reports/validation.json`](reports/validation.json) y se resume en [`reports/VALIDATION.md`](reports/VALIDATION.md): **0,09/0,06/0,06 s** con la muestra y **10,73/11,00/11,00 s** con el conjunto completo para inicial/actualización/repetición. Se mide de nuevo en cada máquina, sin presentarla como garantía de producción. En la actualización, la petición vigente de P-26002 pasa del 12/09 al 13/09; el acuse posterior no la cambia. La segunda pasada conserva el mismo `output_sha256` y los correos anteriores. El ERP sigue indicando su fecha original. La prioridad y sus motivos se detallan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
 
 Las filas idénticas se consolidan. Si dos filas de la misma línea discrepan, no se elige una arbitrariamente; las cantidades contradictorias o sobreexpedidas dejan el pendiente como desconocido y abren revisión. Las fechas vacías son desconocidas. Un correo sin referencia fiable genera un caso sin resolver. Las sugerencias por SKU nunca se vinculan automáticamente. Un contacto nuevo o remitente no coincidente requiere verificar identidad. Ninguna solicitud modifica el ERP por sí sola.
+
+## Procedencia de lo mostrado
+
+Los pedidos, clientes y mensajes se leen de los XLSX entregados en el enunciado; la aplicación no inventa filas ni correos. Por ejemplo, `msg-13756` está en `Correos_full.xlsx`, hoja `Correos`, fila 2622, a las 23:36 del 09/09/2026. Menciona `P-X003756 / 10000`, referencia ausente de `Pedidos_full.xlsx`; por eso aparece en «Sin resolver». Los dominios `.example` pertenecen a los datos ficticios de la prueba, no a sistemas de producción.
+
+La plataforma sí **genera** información derivada: unidades pendientes, prioridad, motivo resumido, acción propuesta, correspondencia o falta de ella, posibles líneas para investigar, tiempos, conteos y huellas de las ejecuciones. También son diseño nuestro los textos de interfaz y el símbolo gráfico de «Bacci Operaciones». Cada detalle conserva el correo original y la procedencia de la línea ERP para poder contrastar esas conclusiones.
 
 ## Validación y mantenimiento
 

@@ -14,3 +14,7 @@
 | 23/09/2026 | Guardar líneas servidas como registros consultables, fuera de la cola operativa | La cola sigue enfocada en acciones, mientras la búsqueda puede encontrar cualquier línea importada. |
 | 23/09/2026 | Indexar valores de pedido, maestro y correos sin tildes ni distinción de mayúsculas | Permite buscar SKU, fechas, unidades, direcciones y texto, además de pedido o cliente. |
 | 23/09/2026 | Al iniciar una búsqueda, abrir «Todos los registros» automáticamente | Evita que una línea servida quede oculta por el filtro implícito de la cola. |
+| 23/09/2026 | Sustituir el selector de datos por una aplicación fijada al conjunto completo | Operaciones debe ver siempre el alcance real; la muestra solo sirve para pruebas por CLI. Reemplaza la decisión anterior sobre selector. |
+| 23/09/2026 | Retirar pestañas duplicadas de prioridad alta y sin resolver | «Alta» ya se obtiene con el filtro de prioridad; «Sin resolver» tiene un acceso propio en el menú lateral. |
+| 23/09/2026 | Renombrar «Ejecuciones» como «Control de cargas» | Expresa su utilidad operativa: auditoría de importaciones e idempotencia. |
+| 23/09/2026 | Separar `operations.sqlite` de la base usada por ensayos CLI | Evita que ejecuciones de desarrollo con reglas anteriores contaminen el historial operativo visible; conserva esas pruebas para auditoría local. |

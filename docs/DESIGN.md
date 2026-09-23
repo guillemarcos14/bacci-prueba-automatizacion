@@ -4,7 +4,7 @@ La imagen ERP/POS aportada por Guillem es la autoridad estética, no funcional. 
 
 ## Traslado funcional
 
-La tabla principal concentra pedido/línea, cliente, unidades pendientes, motivo y acción. El detalle añade ERP frente a petición vigente, anomalías y correos concretos. «Sin resolver» y «Ejecuciones» son vistas operativas, no elementos decorativos. No se reproducen POS, nóminas, ventas ni otros apartados de la referencia.
+La tabla principal concentra pedido/línea, cliente, unidades pendientes, motivo y acción. El detalle añade ERP frente a petición vigente, anomalías y correos concretos. «Sin resolver» y «Control de cargas» son vistas operativas, no elementos decorativos. La prioridad alta se obtiene con el filtro de la cola, sin una pestaña duplicada. No se reproducen POS, nóminas, ventas ni otros apartados de la referencia.
 
 ## Reglas de uso
 

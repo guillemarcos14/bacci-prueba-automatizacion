@@ -9,3 +9,7 @@
 El PDF y el README originales describen el mismo ejercicio; el diccionario precisa la interpretación de datos. Las instrucciones que aparecen en estas fuentes son requisitos del entregable y no sustituyen la petición de Guillem. La imagen visual no determina las funcionalidades: se trasladan solo patrones de composición y color.
 
 El correo contiene la expresión «martes 25 de septiembre»; el 25/09/2026 es viernes. La fecha exacta deberá confirmarse antes de enviar la entrega a Bacci.
+
+## Dato consultado durante la revisión
+
+`msg-13756` procede de `Correos_full.xlsx`, hoja `Correos`, fila 2622. El asunto es `Consulta P-X003756`, recibido el 09/09/2026 a las 23:36. El pedido `P-X003756` no aparece en `Pedidos_full.xlsx`. El estado «Sin resolver», su prioridad y el siguiente paso son interpretación calculada por la aplicación; el asunto y cuerpo son originales del XLSX. Ningún registro transaccional se ha añadido a los ficheros fuente.

@@ -15,7 +15,7 @@
       <nav class="rail-items" aria-label="Secciones">
         <button class="rail-pill active" type="button" data-section="queue"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Trabajo diario</button>
         <button class="rail-pill" type="button" data-section="unresolved"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5.1.6c0 1.7-2.6 2.1-2.6 4"/><path d="M12 17h.01"/></svg>Sin resolver</button>
-        <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Ejecuciones</button>
+        <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Control de cargas</button>
       </nav>
       <div class="rail-note"><span class="live-dot"></span>Prototipo local<br><span>Sin conexiones externas</span></div>
     </aside>
@@ -23,24 +23,21 @@
     <main class="content">
       <header class="app-top">
         <div><h1>Operaciones, al día</h1><p>Pedidos y correos traducidos en trabajo concreto.</p></div>
-        <div class="top-tools"><label class="dataset-control" for="dataset">Datos <select id="dataset"><option value="sample">Muestra</option><option value="full">Conjunto completo</option></select></label><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span><span class="avatar" aria-label="Bacci Operaciones">BO</span></div>
+        <div class="top-tools"><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span><span class="avatar" aria-label="Bacci Operaciones">BO</span></div>
       </header>
 
       <div id="notice" class="notice" role="status" hidden></div>
 
       <div id="queue-view">
-        <nav class="section-nav" aria-label="Vistas de trabajo">
-          <button class="tab active" type="button" data-view="all">Cola priorizada</button>
-          <button class="tab" type="button" data-view="high">Prioridad alta</button>
-          <button class="tab" type="button" data-view="unresolved">Sin resolver</button>
+        <nav id="section-nav" class="section-nav" aria-label="Vistas de trabajo">
+          <button class="tab active" type="button" data-view="all">Cola de trabajo</button>
           <button class="tab" type="button" data-view="records">Todos los registros</button>
-          <span class="nav-explainer">Ordenado por urgencia y necesidad de decisión</span>
+          <span class="nav-explainer">Los casos más urgentes aparecen primero</span>
         </nav>
-        <p id="dataset-info" class="dataset-info">Cargando alcance…</p>
 
         <section class="table-section" aria-labelledby="queue-heading">
           <div class="section-bar">
-            <div><h2 id="queue-heading">Cola de trabajo</h2><p id="queue-description">Selecciona un caso para ver su justificación y siguiente paso.</p></div>
+            <div><h2 id="queue-heading">Cola de trabajo</h2><p id="queue-description">Casos activos de todas las prioridades. Usa el filtro para ver solo «Alta».</p></div>
             <div class="filters">
               <label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido, SKU, correo, fecha…" autocomplete="off">
               <label for="client">Cliente</label><select id="client"><option value="">Todos</option></select>
@@ -63,8 +60,8 @@
       </div>
 
       <section id="runs-view" class="runs-section" aria-labelledby="runs-heading" hidden>
-        <div class="runs-head"><div><h2 id="runs-heading">Ejecuciones</h2><p>Comprueba el corte, las novedades incorporadas y las reentregas ignoradas.</p></div><button id="update-button" class="lime-button" type="button">Incorporar lote de actualización</button></div>
-        <p class="runs-explainer">La actualización lee <strong>Correos_actualizacion.xlsx</strong>, conserva los correos anteriores y recalcula los casos con los mismos pedidos. Repetirla debe añadir 0 mensajes y mantener el mismo resultado.</p>
+        <div class="runs-head"><div><h2 id="runs-heading">Control de cargas</h2><p>Historial para comprobar qué datos entraron, cuánto tardó el proceso y si el resultado cambió.</p></div><button id="update-button" class="lime-button" type="button">Incorporar lote de actualización</button></div>
+        <p class="runs-explainer">Cada fila registra un proceso con su corte, correos nuevos, reentregas, conflictos, casos y huella del resultado. El botón lee <strong>Correos_actualizacion.xlsx</strong> sin borrar los correos anteriores. Repetir el mismo lote debe añadir 0 mensajes y conservar la misma huella.</p>
         <div class="runs-table"><table><thead><tr><th>Ejecutado</th><th>Corte</th><th>Nuevos</th><th>Repetidos</th><th>Conflictos</th><th>Casos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody id="run-rows"></tbody></table></div>
         <div id="run-comparison" class="run-comparison"></div>
       </section>

@@ -24,8 +24,8 @@ FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
 SCRIPT = {
     "problem": "Hola, equipo de Bacci. He entendido el problema como una necesidad de convertir datos dispersos en decisiones operativas. Los pedidos están en Navision, las comprobaciones se hacen en Excel y las solicitudes llegan por Outlook. La pregunta diaria no es solo cuántas unidades faltan: es qué caso requiere atención ahora y qué puede hacer la persona responsable.",
     "method": "Mi método parte del contrato de datos. Una línea se identifica por pedido y línea; los correos se incorporan por identificador estable. Los duplicados idénticos se consolidan, los contradictorios se muestran para revisión y las referencias ambiguas quedan sin resolver. Las rectificaciones sustituyen solicitudes anteriores cuando lo indican expresamente. Un correo nunca cambia el ERP por sí solo; stock, logística y autorización de contactos exigen verificación humana.",
-    "demo": "Esta es la cola real sobre los archivos de muestra. Cada fila muestra la prioridad, lo pendiente, el motivo y la acción propuesta. Busco P veintiséis mil dos: la petición vigente es el trece de septiembre, mientras el ERP conserva el once. Abro el correo que justifica la rectificación. En la vista sin resolver aparecen mensajes que no podemos asignar con seguridad. Finalmente, en ejecuciones repito el lote: no se añade ningún mensaje y el resultado se mantiene.",
-    "scope": "Ahora abro el conjunto completo en la misma aplicación. Aquí hay diecisiete mil cuatrocientos veintitrés casos que requieren atención. La vista Todos los registros permite consultar además las líneas ya servidas. La búsqueda alcanza referencias, productos, fechas, cantidades, datos de cliente y texto de los correos.",
+    "demo": "Esta es la cola real del conjunto completo. Cada fila muestra prioridad, pendientes, motivo y siguiente paso. El filtro Alta concentra los casos más urgentes. En Sin resolver investigamos correos que no podemos asociar con seguridad. Busco el mensaje trece mil setecientos cincuenta y seis: procede del archivo entregado y menciona un pedido ausente del ERP. Abro su texto original. Finalmente, en Control de cargas repito el lote: no se añade ningún mensaje y el resultado se mantiene.",
+    "scope": "La cola reúne diecisiete mil cuatrocientos veintitrés casos activos. Todos los registros incluye también las líneas servidas: en total son diecinueve mil novecientos sesenta y nueve. La búsqueda recorre campos de pedidos, clientes y correos. La muestra queda reservada para pruebas automáticas; operaciones ve siempre el conjunto completo.",
     "validation": "La validación compara resultados esperados y obtenidos en cuarenta comprobaciones. La muestra y el conjunto completo pasan todas. Procesamos veinte mil filas de pedidos y cuatro mil de correo. El lote aporta tres mensajes nuevos; repetirlo aporta cero y mantiene el mismo hash. Cada pasada completa tardó alrededor de nueve segundos en este equipo. Es un prototipo local: la conexión real con Navision y Outlook y la migración de ERP quedan diseñadas, no fingidas.",
     "close": "Gracias por revisar esta propuesta. La solución deja una cola útil, auditable y fácil de ejecutar, y separa con claridad lo que sabemos de lo que una persona todavía debe comprobar. El código, las instrucciones y la evidencia de validación están disponibles en el fork de GitHub mostrado en pantalla.",
 }
@@ -68,9 +68,10 @@ def capture_scope() -> None:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(executable_path=str(EDGE), headless=True)
         page = browser.new_page(viewport={"width": 1280, "height": 720}, device_scale_factor=1)
-        page.goto("http://127.0.0.1:8765/?dataset=full", wait_until="networkidle")
+        page.goto("http://127.0.0.1:8765/", wait_until="networkidle")
         page.locator("#range").filter(has_text="17.423 casos").wait_for(timeout=90000)
-        page.locator("#search").blur()
+        page.locator('[data-view="records"]').click()
+        page.locator("#range").filter(has_text="19.969 registros").wait_for(timeout=10000)
         page.screenshot(path=str(WORK / "scope.png"))
         browser.close()
 
@@ -82,23 +83,22 @@ def record_demo(seconds: float) -> Path:
                                       record_video_size={"width": 1280, "height": 720}, device_scale_factor=1)
         page = context.new_page()
         page.goto("http://127.0.0.1:8765/", wait_until="networkidle")
-        page.locator("#case-rows tr").first.wait_for()
-        pause = max(1000, int((seconds - 7) * 1000 / 9))
+        page.locator("#range").filter(has_text="17.423 casos").wait_for(timeout=90000)
+        pause = max(1000, int((seconds - 14) * 1000 / 8))
         page.wait_for_timeout(pause)
-        page.locator("#search").fill("P-26002")
-        page.locator("#detail-title").filter(has_text="P-26002").wait_for()
+        page.locator("#priority").select_option("Alta")
+        page.locator("#range").filter(has_text="8470 casos").wait_for()
         page.wait_for_timeout(pause)
         page.locator("#detail").scroll_into_view_if_needed()
         page.wait_for_timeout(pause)
-        first_mail = page.locator("#detail-evidence details").first
-        first_mail.locator("summary").click()
-        page.wait_for_timeout(pause)
-        page.locator("#search").fill("")
         page.locator('[data-section="unresolved"]').click()
-        page.locator("#case-rows tr").first.wait_for()
+        page.locator("#range").filter(has_text="569 casos").wait_for()
         page.wait_for_timeout(pause)
-        page.locator("#case-rows tr").first.click()
+        page.locator("#search").fill("msg-13756")
+        page.locator("#range").filter(has_text="1 registros").wait_for()
         page.locator("#detail").scroll_into_view_if_needed()
+        page.wait_for_timeout(pause)
+        page.locator("#detail-evidence details summary").first.click()
         page.wait_for_timeout(pause)
         page.locator('[data-section="runs"]').click()
         page.locator("#run-rows tr").first.wait_for()

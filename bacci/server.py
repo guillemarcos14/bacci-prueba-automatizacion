@@ -4,50 +4,17 @@ from __future__ import annotations
 
 import json
 import threading
-from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
-from .core import INITIAL_CUTOFF, UPDATE_CUTOFF, connect, get_case, list_cases, recent_runs, run_import, summary
+from .core import UPDATE_CUTOFF, get_case, list_cases, recent_runs, run_import, summary
 
 WEB = Path(__file__).resolve().parent / "web"
-ROOT = WEB.parent.parent
 UPDATE_LOCK = threading.Lock()
-DATASET_LOCK = threading.Lock()
 
 
-def handler_factory(db: Path, dataset: str, orders: Path, update_mail: Path):
-    configs = {}
-    for name, suffix in (("sample", "muestra"), ("full", "full")):
-        configs[name] = (ROOT / "data" / f"{name}.sqlite", ROOT / f"Pedidos_{suffix}.xlsx",
-                         ROOT / f"Correos_{suffix}.xlsx", update_mail)
-    configs[dataset] = (db, orders, ROOT / f"Correos_{'muestra' if dataset == 'sample' else 'full'}.xlsx", update_mail)
-    ready: set[str] = set()
-
-    def selected(query: dict[str, list[str]]) -> tuple[str, Path, Path, Path]:
-        name = query.get("dataset", [dataset])[0]
-        if name not in configs:
-            raise ValueError("Conjunto de datos desconocido")
-        target_db, target_orders, initial_mail, target_update = configs[name]
-        if name not in ready:
-            with DATASET_LOCK:
-                if name not in ready:
-                    version = 0
-                    if target_db.exists():
-                        connection = connect(target_db)
-                        try:
-                            version = connection.execute("PRAGMA user_version").fetchone()[0]
-                        finally:
-                            connection.close()
-                    if not target_db.exists() or not recent_runs(target_db, 1):
-                        run_import(target_db, name, target_orders, initial_mail, INITIAL_CUTOFF)
-                        run_import(target_db, name, target_orders, target_update, UPDATE_CUTOFF)
-                    elif version < 2:
-                        run_import(target_db, name, target_orders, target_update, UPDATE_CUTOFF)
-                    ready.add(name)
-        return name, target_db, target_orders, target_update
-
+def handler_factory(db: Path, orders: Path, update_mail: Path):
     class Handler(BaseHTTPRequestHandler):
         server_version = "BacciLocal/0.1"
 
@@ -68,23 +35,21 @@ def handler_factory(db: Path, dataset: str, orders: Path, update_mail: Path):
             parsed = urlparse(self.path)
             query = parse_qs(parsed.query)
             try:
-                if parsed.path.startswith("/api/") and parsed.path != "/api/health":
-                    _, target_db, _, _ = selected(query)
                 if parsed.path == "/api/summary":
-                    self._json(200, summary(target_db))
+                    self._json(200, summary(db))
                 elif parsed.path == "/api/runs":
-                    self._json(200, recent_runs(target_db))
+                    self._json(200, recent_runs(db))
                 elif parsed.path == "/api/cases":
                     page = max(1, int(query.get("page", ["1"])[0]))
-                    self._json(200, list_cases(target_db, client=query.get("client", [""])[0] or None,
+                    self._json(200, list_cases(db, client=query.get("client", [""])[0] or None,
                                                priority=query.get("priority", [""])[0] or None,
                                                view=query.get("view", ["all"])[0],
                                                search=query.get("search", [""])[0], page=page))
                 elif parsed.path.startswith("/api/cases/"):
-                    case = get_case(target_db, unquote(parsed.path.removeprefix("/api/cases/")))
+                    case = get_case(db, unquote(parsed.path.removeprefix("/api/cases/")))
                     self._json(200 if case else 404, case if case else {"error": "Caso no encontrado"})
                 elif parsed.path == "/api/health":
-                    self._json(200, {"ok": True, "dataset": dataset})
+                    self._json(200, {"ok": True, "dataset": "full"})
                 else:
                     route = {"/": ("index.html", "text/html; charset=utf-8"),
                              "/styles.css": ("styles.css", "text/css; charset=utf-8"),
@@ -110,8 +75,7 @@ def handler_factory(db: Path, dataset: str, orders: Path, update_mail: Path):
                 return
             with UPDATE_LOCK:
                 try:
-                    selected_dataset, target_db, target_orders, target_update = selected(parse_qs(parsed.query))
-                    result = run_import(target_db, selected_dataset, target_orders, target_update, UPDATE_CUTOFF)
+                    result = run_import(db, "full", orders, update_mail, UPDATE_CUTOFF)
                     self._json(200, result.__dict__)
                 except ValueError as error:
                     self._json(400, {"error": str(error)})
@@ -124,9 +88,9 @@ def handler_factory(db: Path, dataset: str, orders: Path, update_mail: Path):
     return Handler
 
 
-def serve(db: Path, dataset: str, orders: Path, update_mail: Path, port: int) -> None:
-    httpd = ThreadingHTTPServer(("127.0.0.1", port), handler_factory(db, dataset, orders, update_mail))
-    print(f"Bacci Operaciones · http://127.0.0.1:{port} · {dataset}", flush=True)
+def serve(db: Path, orders: Path, update_mail: Path, port: int) -> None:
+    httpd = ThreadingHTTPServer(("127.0.0.1", port), handler_factory(db, orders, update_mail))
+    print(f"Bacci Operaciones · http://127.0.0.1:{port} · full", flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

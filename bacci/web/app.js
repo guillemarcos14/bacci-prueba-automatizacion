@@ -1,13 +1,11 @@
-const requestedDataset=new URLSearchParams(location.search).get('dataset');
-const state = {section:'queue',view:'all',page:1,selected:null,summary:null,searchTimer:null,
-  dataset:requestedDataset==='full'?'full':'sample',caseRequest:0};
+if(new URLSearchParams(location.search).has('dataset'))history.replaceState(null,'',location.pathname);
+const state = {section:'queue',view:'all',page:1,selected:null,summary:null,searchTimer:null,caseRequest:0};
 const $ = id => document.getElementById(id);
 const formatDate = value => value ? new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',year:'numeric'}).format(new Date(`${value.slice(0,10)}T12:00:00`)) : 'Sin dato';
 const number = value => value === null || value === undefined ? '—' : new Intl.NumberFormat('es-ES').format(value);
 
 async function api(path, options={}) {
-  const url=new URL(path,location.origin);url.searchParams.set('dataset',state.dataset);
-  const response = await fetch(url,{cache:'no-store',...options});
+  const response = await fetch(path,{cache:'no-store',...options});
   const data = await response.json();
   if(!response.ok) throw new Error(data.error || `Error ${response.status}`);
   return data;
@@ -15,14 +13,10 @@ async function api(path, options={}) {
 function notice(message,error=false){const el=$('notice');el.textContent=message;el.classList.toggle('error',error);el.hidden=false;}
 function clearNotice(){ $('notice').hidden=true; }
 function cell(text, strong=false, small=null){const td=document.createElement('td');const main=document.createElement(strong?'strong':'span');main.textContent=text;td.append(main);if(small){const sub=document.createElement('small');sub.textContent=small;td.append(sub)}return td;}
-function setActive(selector, active){document.querySelectorAll(selector).forEach(el=>el.classList.toggle('active',el===active));}
-
 async function loadSummary(){
   state.summary=await api('/api/summary');
   const run=state.summary.latest_run;
-  $('cutoff').textContent=run ? `Corte ${formatDate(run.as_of)} · ${run.as_of.slice(11,16)} · ${run.dataset==='full'?'Completo':'Muestra'}` : 'Sin datos';
-  $('dataset').value=state.dataset;
-  $('dataset-info').textContent=run ? `${state.dataset==='full'?'Conjunto completo':'Muestra'} · ${number(run.total_cases)} casos que requieren atención · ${number(state.summary.total_records)} registros consultables, incluidos los ya servidos.` : 'Sin datos';
+  $('cutoff').textContent=run ? `Corte ${formatDate(run.as_of)} · ${run.as_of.slice(11,16)}` : 'Sin datos';
   const select=$('client'), current=select.value;select.replaceChildren(new Option('Todos',''));
   for(const client of state.summary.clients) select.add(new Option(client.name,client.id));
   select.value=current;
@@ -64,9 +58,8 @@ async function loadCases(){
 }
 
 async function loadDetail(id){
-  const dataset=state.dataset;
   const data=await api(`/api/cases/${encodeURIComponent(id)}`);
-  if(id!==state.selected || dataset!==state.dataset)return;
+  if(id!==state.selected)return;
   $('detail-title').textContent=data.order_id ? `${data.order_id}${data.line_id?' · línea '+data.line_id:''}` : `Correo ${data.emails?.[0]?.message_id||''}`;
   $('detail-item').textContent=[data.cliente,data.sku,data.color,data.talla].filter(Boolean).join(' · ');
   $('detail-state').textContent=!data.attention?'Servido':data.unresolved?'Sin correspondencia':data.issues?.some(x=>x.includes('verificar')||x.includes('contradictorios'))?'Revisión humana':data.requested_date?'Solicitud sin confirmar':data.priority==='Alta'?'Atención prioritaria':'Pendiente';
@@ -94,24 +87,20 @@ async function showSection(section){
   state.section=section;document.querySelectorAll('.rail-pill').forEach(x=>x.classList.toggle('active',x.dataset.section===section));
   $('queue-view').hidden=section==='runs';$('runs-view').hidden=section!=='runs';
   if(section==='runs'){await loadRuns();return}
-  state.view=section==='unresolved'?'unresolved':'all';state.page=1;
-  await showView(state.view,true);
+  $('search').value='';$('client').value='';$('priority').value='';state.page=1;
+  if(section==='unresolved'){
+    $('section-nav').hidden=true;$('queue-heading').textContent='Correos sin resolver';
+    $('queue-description').textContent='Mensajes que requieren identificar el pedido o la línea antes de actuar.';
+    state.view='unresolved';await loadCases();return;
+  }
+  await showView('all',true);
 }
 async function showView(view,fromSection=false){state.view=view;state.page=1;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
   if(view!=='records')$('search').value='';
   if(!fromSection){state.section='queue';document.querySelectorAll('.rail-pill').forEach(x=>x.classList.toggle('active',x.dataset.section==='queue'))}
-  $('queue-description').textContent=view==='records'?'Todas las líneas de pedido y los correos sin correspondencia, incluso si ya no requieren atención.':view==='unresolved'?'Correos que requieren una asociación manual antes de actuar.':view==='high'?'Casos que necesitan atención prioritaria.':'Selecciona un caso para ver su justificación y siguiente paso.';
+  $('section-nav').hidden=false;$('queue-heading').textContent=view==='records'?'Todos los registros':'Cola de trabajo';
+  $('queue-description').textContent=view==='records'?'Líneas servidas y casos activos. Buscar recorre los datos de pedidos, clientes y correos.':'Casos activos de todas las prioridades. Usa el filtro para ver solo «Alta».';
   await loadCases();}
-
-async function changeDataset(){
-  const previous=state.dataset,next=$('dataset').value;
-  if(next===previous)return;
-  state.dataset=next;state.page=1;state.selected=null;state.caseRequest++;
-  $('dataset').disabled=true;notice(`Preparando ${next==='full'?'el conjunto completo':'la muestra'}… La primera carga puede tardar unos 20 segundos.`);
-  try{await loadSummary();await showSection('queue');history.replaceState(null,'',next==='full'?'?dataset=full':location.pathname);clearNotice()}
-  catch(error){state.dataset=previous;$('dataset').value=previous;notice(`No se pudo abrir el conjunto de datos: ${error.message}`,true)}
-  finally{$('dataset').disabled=false}
-}
 
 async function loadRuns(){
   const runs=await api('/api/runs');const body=$('run-rows');body.replaceChildren();
@@ -138,7 +127,6 @@ function wire(){
   document.querySelectorAll('.rail-pill').forEach(x=>x.addEventListener('click',()=>showSection(x.dataset.section).catch(e=>notice(e.message,true))));
   document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>showView(x.dataset.view).catch(e=>notice(e.message,true))));
   for(const id of ['client','priority'])$(id).addEventListener('change',()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))});
-  $('dataset').addEventListener('change',changeDataset);
   $('search').addEventListener('input',()=>{clearTimeout(state.searchTimer);
     if($('search').value.trim() && state.view!=='records'){showView('records').catch(e=>notice(e.message,true));return}
     state.searchTimer=setTimeout(()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))},250)});
