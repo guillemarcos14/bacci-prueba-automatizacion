@@ -1,6 +1,6 @@
 # Identidad visual aprobada
 
-La imagen ERP/POS aportada por Guillem es la autoridad estética, no funcional. La aplicación usa una ventana gris suave con degradado lila, azul y verde en la zona inferior; superficies blancas cálidas; texto grafito; navegación y pestañas en píldoras; lima pálido para sección y caso seleccionados.
+La imagen ERP/POS aportada por Guillem es la autoridad estética, no funcional. La aplicación usa un fondo gris suave a pantalla completa con degradado lila, azul y verde en la zona inferior; superficies blancas cálidas; texto grafito; navegación y pestañas en píldoras; lima pálido para sección y caso seleccionados. El ancho se adapta a la ventana para dar más espacio a la tabla y el detalle.
 
 ## Traslado funcional
 

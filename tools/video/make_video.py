@@ -25,6 +25,7 @@ SCRIPT = {
     "problem": "Hola, equipo de Bacci. He entendido el problema como una necesidad de convertir datos dispersos en decisiones operativas. Los pedidos están en Navision, las comprobaciones se hacen en Excel y las solicitudes llegan por Outlook. La pregunta diaria no es solo cuántas unidades faltan: es qué caso requiere atención ahora y qué puede hacer la persona responsable.",
     "method": "Mi método parte del contrato de datos. Una línea se identifica por pedido y línea; los correos se incorporan por identificador estable. Los duplicados idénticos se consolidan, los contradictorios se muestran para revisión y las referencias ambiguas quedan sin resolver. Las rectificaciones sustituyen solicitudes anteriores cuando lo indican expresamente. Un correo nunca cambia el ERP por sí solo; stock, logística y autorización de contactos exigen verificación humana.",
     "demo": "Esta es la cola real sobre los archivos de muestra. Cada fila muestra la prioridad, lo pendiente, el motivo y la acción propuesta. Busco P veintiséis mil dos: la petición vigente es el trece de septiembre, mientras el ERP conserva el once. Abro el correo que justifica la rectificación. En la vista sin resolver aparecen mensajes que no podemos asignar con seguridad. Finalmente, en ejecuciones repito el lote: no se añade ningún mensaje y el resultado se mantiene.",
+    "scope": "Ahora abro el conjunto completo en la misma aplicación. Aquí hay diecisiete mil cuatrocientos veintitrés casos que requieren atención. La vista Todos los registros permite consultar además las líneas ya servidas. La búsqueda alcanza referencias, productos, fechas, cantidades, datos de cliente y texto de los correos.",
     "validation": "La validación compara resultados esperados y obtenidos en cuarenta comprobaciones. La muestra y el conjunto completo pasan todas. Procesamos veinte mil filas de pedidos y cuatro mil de correo. El lote aporta tres mensajes nuevos; repetirlo aporta cero y mantiene el mismo hash. Cada pasada completa tardó alrededor de nueve segundos en este equipo. Es un prototipo local: la conexión real con Navision y Outlook y la migración de ERP quedan diseñadas, no fingidas.",
     "close": "Gracias por revisar esta propuesta. La solución deja una cola útil, auditable y fácil de ejecutar, y separa con claridad lo que sabemos de lo que una persona todavía debe comprobar. El código, las instrucciones y la evidencia de validación están disponibles en el fork de GitHub mostrado en pantalla.",
 }
@@ -60,6 +61,17 @@ def capture_slides() -> None:
         for key in ("problem", "method", "validation", "close"):
             page.goto(f"{SLIDES}?slide={key}", wait_until="load")
             page.screenshot(path=str(WORK / f"{key}.png"))
+        browser.close()
+
+
+def capture_scope() -> None:
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(executable_path=str(EDGE), headless=True)
+        page = browser.new_page(viewport={"width": 1280, "height": 720}, device_scale_factor=1)
+        page.goto("http://127.0.0.1:8765/?dataset=full", wait_until="networkidle")
+        page.locator("#range").filter(has_text="17.423 casos").wait_for(timeout=90000)
+        page.locator("#search").blur()
+        page.screenshot(path=str(WORK / "scope.png"))
         browser.close()
 
 
@@ -122,8 +134,9 @@ def main() -> None:
     voices = synthesize()
     print("Narraciones:", {key: round(duration(path), 1) for key, path in voices.items()}, flush=True)
     capture_slides()
+    capture_scope()
     demo = record_demo(duration(voices["demo"]) + 1.0)
-    order = ("problem", "method", "demo", "validation", "close")
+    order = ("problem", "method", "demo", "scope", "validation", "close")
     segments = [render_segment(key, voices[key], demo if key == "demo" else None) for key in order]
     concat = WORK / "segments.txt"
     concat.write_text("\n".join(f"file '{path.as_posix()}'" for path in segments), encoding="utf-8")

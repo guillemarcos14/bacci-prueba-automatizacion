@@ -23,7 +23,7 @@
     <main class="content">
       <header class="app-top">
         <div><h1>Operaciones, al día</h1><p>Pedidos y correos traducidos en trabajo concreto.</p></div>
-        <div class="top-tools"><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span><span class="avatar" aria-label="Bacci Operaciones">BO</span></div>
+        <div class="top-tools"><label class="dataset-control" for="dataset">Datos <select id="dataset"><option value="sample">Muestra</option><option value="full">Conjunto completo</option></select></label><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span><span class="avatar" aria-label="Bacci Operaciones">BO</span></div>
       </header>
 
       <div id="notice" class="notice" role="status" hidden></div>
@@ -33,14 +33,16 @@
           <button class="tab active" type="button" data-view="all">Cola priorizada</button>
           <button class="tab" type="button" data-view="high">Prioridad alta</button>
           <button class="tab" type="button" data-view="unresolved">Sin resolver</button>
+          <button class="tab" type="button" data-view="records">Todos los registros</button>
           <span class="nav-explainer">Ordenado por urgencia y necesidad de decisión</span>
         </nav>
+        <p id="dataset-info" class="dataset-info">Cargando alcance…</p>
 
         <section class="table-section" aria-labelledby="queue-heading">
           <div class="section-bar">
             <div><h2 id="queue-heading">Cola de trabajo</h2><p id="queue-description">Selecciona un caso para ver su justificación y siguiente paso.</p></div>
             <div class="filters">
-              <label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido o cliente" autocomplete="off">
+              <label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido, SKU, correo, fecha…" autocomplete="off">
               <label for="client">Cliente</label><select id="client"><option value="">Todos</option></select>
               <label for="priority">Prioridad</label><select id="priority"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baja</option></select>
             </div>

@@ -4,12 +4,12 @@ Fuente reproducible: `python tools/harness.py --dataset both --output reports/va
 
 | Conjunto | Etapa | Mensajes nuevos | Reentregas ignoradas | Mensajes activos | Casos | Sin resolver | Tiempo |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Muestra | Inicial, 10:00 | 24 | 1 | 24 | 90 | 2 | 89,59 ms |
-| Muestra | Actualización, 11:00 | 3 | 2 | 27 | 90 | 2 | 64,22 ms |
-| Muestra | Repetición, 11:00 | 0 | 5 | 27 | 90 | 2 | 63,72 ms |
-| Completo | Inicial, 10:00 | 3.800 | 200 | 3.800 | 17.423 | 569 | 9.120,18 ms |
-| Completo | Actualización, 11:00 | 3 | 2 | 3.803 | 17.423 | 569 | 8.588,22 ms |
-| Completo | Repetición, 11:00 | 0 | 5 | 3.803 | 17.423 | 569 | 9.059,28 ms |
+| Muestra | Inicial, 10:00 | 24 | 1 | 24 | 90 | 2 | 85,57 ms |
+| Muestra | Actualización, 11:00 | 3 | 2 | 27 | 90 | 2 | 62,77 ms |
+| Muestra | Repetición, 11:00 | 0 | 5 | 27 | 90 | 2 | 62,13 ms |
+| Completo | Inicial, 10:00 | 3.800 | 200 | 3.800 | 17.423 | 569 | 10.729,73 ms |
+| Completo | Actualización, 11:00 | 3 | 2 | 3.803 | 17.423 | 569 | 10.996,91 ms |
+| Completo | Repetición, 11:00 | 0 | 5 | 3.803 | 17.423 | 569 | 10.996,60 ms |
 
 La muestra cambia de digest `3999816788cb` a `3349971f02e2` con el lote; repetirlo conserva `3349971f02e2`. El conjunto completo cambia de `b0e0fc7a0748` a `2e19baef16f0` y lo conserva al repetir.
 

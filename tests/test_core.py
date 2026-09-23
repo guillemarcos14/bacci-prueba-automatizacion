@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 
@@ -77,6 +78,30 @@ class UpdateSequenceTests(unittest.TestCase):
             self.assertEqual(repeated.repeated_messages, 5)
             self.assertEqual(repeated.output_sha256, updated.output_sha256)
             self.assertEqual(list_cases(db, view="unresolved")["total"], updated.unresolved_cases)
+
+            # La cola mantiene solo trabajo pendiente, pero la consulta incluye líneas ya servidas.
+            self.assertEqual(list_cases(db)["total"], 90)
+            self.assertEqual(list_cases(db, view="records")["total"], 100)
+            connection = sqlite3.connect(db)
+            try:
+                served_id, served_order = connection.execute(
+                    "SELECT case_id,order_id FROM cases WHERE attention=0 LIMIT 1").fetchone()
+            finally:
+                connection.close()
+            self.assertEqual(get_case(db, served_id)["reason"], "Línea servida sin incidencia")
+            matches = list_cases(db, view="records", search=served_order, page_size=100)
+            self.assertIn(served_id, {item["case_id"] for item in matches["items"]})
+
+            # La búsqueda abarca SKU, cuerpo de correo y maestro de clientes, no solo pedido y nombre.
+            self.assertIn("line:P-26002:10000", {item["case_id"] for item in
+                list_cases(db, search="rectifico mi correo", page_size=100)["items"]})
+            sku = after["sku"]
+            self.assertIn("line:P-26002:10000", {item["case_id"] for item in
+                list_cases(db, search=sku, page_size=100)["items"]})
+            customer_email = next(row["email"] for row in load_sheet(orders, "Clientes")
+                                  if str(row["cliente_id"]) == after["cliente_id"])
+            self.assertIn("line:P-26002:10000", {item["case_id"] for item in
+                list_cases(db, search=customer_email, page_size=100)["items"]})
 
 
 if __name__ == "__main__":

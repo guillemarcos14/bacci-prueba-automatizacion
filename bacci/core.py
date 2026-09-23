@@ -55,6 +55,15 @@ def fold(value: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", value.casefold()) if not unicodedata.combining(c))
 
 
+def search_text(value: Any) -> str:
+    """Indexa valores de origen, incluidos pedidos, maestro y correos, sin depender de nombres de columnas."""
+    if isinstance(value, dict):
+        return " ".join(search_text(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return " ".join(search_text(item) for item in value)
+    return fold(str(value)) if value is not None else ""
+
+
 def load_sheet(path: Path, sheet: str) -> list[dict[str, Any]]:
     workbook = load_workbook(path, read_only=True, data_only=True)
     try:
@@ -187,7 +196,8 @@ def connect(path: Path) -> sqlite3.Connection:
           case_id TEXT PRIMARY KEY, kind TEXT NOT NULL, order_id TEXT, line_id TEXT,
           client_id TEXT, client_name TEXT, priority TEXT NOT NULL, priority_rank INTEGER NOT NULL,
           due_date TEXT, pending REAL, reason TEXT, action TEXT, attention INTEGER NOT NULL,
-          unresolved INTEGER NOT NULL, sort_time TEXT, detail_json TEXT NOT NULL
+          unresolved INTEGER NOT NULL, sort_time TEXT, detail_json TEXT NOT NULL,
+          search_text TEXT NOT NULL DEFAULT ''
         );
         CREATE INDEX IF NOT EXISTS cases_queue ON cases(attention, priority_rank, due_date, case_id);
         CREATE INDEX IF NOT EXISTS cases_client ON cases(client_id, priority);
@@ -200,6 +210,8 @@ def connect(path: Path) -> sqlite3.Connection:
           output_sha256 TEXT NOT NULL, elapsed_ms REAL NOT NULL, created_at TEXT NOT NULL
         );
     """)
+    if "search_text" not in {row[1] for row in connection.execute("PRAGMA table_info(cases)")}:
+        connection.execute("ALTER TABLE cases ADD COLUMN search_text TEXT NOT NULL DEFAULT ''")
     return connection
 
 
@@ -259,7 +271,7 @@ def _sort_case(case: dict[str, Any]) -> tuple[Any, ...]:
     return (case["priority_rank"], case.get("fecha_compromiso") or "9999-12-31", case["case_id"])
 
 
-def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, Any]], messages: list[dict[str, Any]], as_of: datetime) -> list[dict[str, Any]]:
+def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, Any]], messages: list[dict[str, Any]], as_of: datetime, *, include_inactive: bool = False) -> list[dict[str, Any]]:
     lines, customers, by_order = build_lines(order_rows, customer_rows)
     active_messages = sorted((m for m in messages if m["received_at"] <= as_of.isoformat(timespec="minutes")), key=lambda m: (m["received_at"], m["message_id"]))
     unresolved: list[dict[str, Any]] = []
@@ -364,10 +376,12 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
             reason, action = "Compromiso próximo", "Preparar la expedición y confirmar disponibilidad"
         else:
             reason, action = "Unidades pendientes", "Planificar la siguiente expedición"
+        if not attention:
+            reason, action = "Línea servida sin incidencia", "Sin acción operativa pendiente"
         line.update({"priority": priority, "priority_rank": rank, "attention": attention,
                      "unresolved": False, "reason": reason, "action": action, "overdue": overdue,
                      "due_today": due_today, "request_count": len(requests), "sort_time": emails[-1]["received_at"] if emails else None})
-        if attention:
+        if attention or include_inactive:
             cases.append(line)
     for item in unresolved:
         item.update({"priority": "Alta" if item["emails"][0]["intent"] in ("cambio_fecha", "cancelacion") else "Media",
@@ -432,12 +446,18 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
                 existing[mid] = fingerprint
                 added += 1
             messages = [dict(row) for row in connection.execute("SELECT message_id,received_at,sender,recipient,subject,body FROM messages")]
-            cases = build_cases(order_rows, customer_rows, messages, as_of)
+            all_cases = build_cases(order_rows, customer_rows, messages, as_of, include_inactive=True)
+            cases = [case for case in all_cases if case["attention"]]
+            customer_emails = {str(row.get("cliente_id")): row.get("email") or "" for row in customer_rows}
             connection.execute("DELETE FROM cases")
-            connection.executemany("""INSERT INTO cases VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
+            connection.executemany("""INSERT INTO cases
+              (case_id,kind,order_id,line_id,client_id,client_name,priority,priority_rank,due_date,
+               pending,reason,action,attention,unresolved,sort_time,detail_json,search_text)
+              VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""", [
                 (c["case_id"], c["kind"], c.get("order_id"), c.get("line_id"), c.get("cliente_id"), c.get("cliente"),
                  c["priority"], c["priority_rank"], c.get("fecha_compromiso"), c.get("pendientes"), c["reason"],
-                 c["action"], int(c["attention"]), int(c["unresolved"]), c.get("sort_time"), canonical_json(c)) for c in cases
+                 c["action"], int(c["attention"]), int(c["unresolved"]), c.get("sort_time"), canonical_json(c),
+                 search_text((c, customer_emails.get(c.get("cliente_id"), "")))) for c in all_cases
             ])
             output_sha = digest(cases)
             active_count = sum(m["received_at"] <= as_of.isoformat(timespec="minutes") for m in messages)
@@ -449,6 +469,7 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
                repeated, conflicting, active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases),
                output_sha, elapsed, datetime.now().isoformat(timespec="seconds")))
             run_id = cursor.lastrowid
+            connection.execute("PRAGMA user_version=2")
         return RunResult(run_id, dataset, as_of.isoformat(timespec="minutes"), added, repeated, conflicting,
                          active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases), output_sha, elapsed)
     finally:
@@ -459,9 +480,11 @@ def summary(db_path: Path) -> dict[str, Any]:
     connection = connect(db_path)
     try:
         latest = connection.execute("SELECT * FROM runs ORDER BY run_id DESC LIMIT 1").fetchone()
-        counts = {row["priority"]: row["n"] for row in connection.execute("SELECT priority,COUNT(*) n FROM cases GROUP BY priority")}
+        counts = {row["priority"]: row["n"] for row in connection.execute("SELECT priority,COUNT(*) n FROM cases WHERE attention=1 GROUP BY priority")}
         clients = [dict(row) for row in connection.execute("SELECT DISTINCT client_id id,client_name name FROM cases WHERE client_id IS NOT NULL ORDER BY name")]
-        return {"latest_run": dict(latest) if latest else None, "priorities": counts, "clients": clients}
+        records = connection.execute("SELECT COUNT(*) FROM cases").fetchone()[0]
+        return {"latest_run": dict(latest) if latest else None, "priorities": counts, "clients": clients,
+                "total_records": records}
     finally:
         connection.close()
 
@@ -469,7 +492,7 @@ def summary(db_path: Path) -> dict[str, Any]:
 def list_cases(db_path: Path, *, client: str | None = None, priority: str | None = None, view: str = "all", search: str = "", page: int = 1, page_size: int = 6) -> dict[str, Any]:
     connection = connect(db_path)
     try:
-        clauses = ["attention=1"]
+        clauses = [] if view == "records" else ["attention=1"]
         params: list[Any] = []
         if client:
             clauses.append("client_id=?")
@@ -482,12 +505,13 @@ def list_cases(db_path: Path, *, client: str | None = None, priority: str | None
         elif view == "high":
             clauses.append("priority='Alta'")
         if search.strip():
-            clauses.append("(order_id LIKE ? OR client_name LIKE ? OR reason LIKE ?)")
-            params.extend([f"%{search.strip()}%"] * 3)
-        where = " AND ".join(clauses)
+            clauses.append("search_text LIKE ? ESCAPE '\\'")
+            term = fold(search.strip()).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            params.append(f"%{term}%")
+        where = " AND ".join(clauses) if clauses else "1=1"
         total = connection.execute(f"SELECT COUNT(*) FROM cases WHERE {where}", params).fetchone()[0]
         rows = connection.execute(f"""SELECT case_id,kind,order_id,line_id,client_id,client_name,priority,
-          due_date,pending,reason,action,unresolved FROM cases WHERE {where}
+          due_date,pending,reason,action,attention,unresolved FROM cases WHERE {where}
           ORDER BY priority_rank,due_date IS NULL,due_date,sort_time DESC,case_id LIMIT ? OFFSET ?""",
           [*params, page_size, (max(1, page) - 1) * page_size]).fetchall()
         return {"total": total, "page": max(1, page), "page_size": page_size, "items": [dict(row) for row in rows]}

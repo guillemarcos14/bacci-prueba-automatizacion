@@ -1,10 +1,13 @@
-const state = {section:'queue',view:'all',page:1,selected:null,summary:null,searchTimer:null};
+const requestedDataset=new URLSearchParams(location.search).get('dataset');
+const state = {section:'queue',view:'all',page:1,selected:null,summary:null,searchTimer:null,
+  dataset:requestedDataset==='full'?'full':'sample',caseRequest:0};
 const $ = id => document.getElementById(id);
 const formatDate = value => value ? new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',year:'numeric'}).format(new Date(`${value.slice(0,10)}T12:00:00`)) : 'Sin dato';
 const number = value => value === null || value === undefined ? '—' : new Intl.NumberFormat('es-ES').format(value);
 
 async function api(path, options={}) {
-  const response = await fetch(path,{cache:'no-store',...options});
+  const url=new URL(path,location.origin);url.searchParams.set('dataset',state.dataset);
+  const response = await fetch(url,{cache:'no-store',...options});
   const data = await response.json();
   if(!response.ok) throw new Error(data.error || `Error ${response.status}`);
   return data;
@@ -18,6 +21,8 @@ async function loadSummary(){
   state.summary=await api('/api/summary');
   const run=state.summary.latest_run;
   $('cutoff').textContent=run ? `Corte ${formatDate(run.as_of)} · ${run.as_of.slice(11,16)} · ${run.dataset==='full'?'Completo':'Muestra'}` : 'Sin datos';
+  $('dataset').value=state.dataset;
+  $('dataset-info').textContent=run ? `${state.dataset==='full'?'Conjunto completo':'Muestra'} · ${number(run.total_cases)} casos que requieren atención · ${number(state.summary.total_records)} registros consultables, incluidos los ya servidos.` : 'Sin datos';
   const select=$('client'), current=select.value;select.replaceChildren(new Option('Todos',''));
   for(const client of state.summary.clients) select.add(new Option(client.name,client.id));
   select.value=current;
@@ -29,7 +34,7 @@ function renderRows(items){
     const row=document.createElement('tr');row.dataset.id=item.case_id;row.tabIndex=0;
     row.classList.toggle('selected',item.case_id===state.selected);
     const priority=document.createElement('td'),label=document.createElement('span'),dot=document.createElement('i');
-    label.className=`priority-label ${item.priority.toLowerCase()}`;dot.className='priority-dot';dot.setAttribute('aria-hidden','true');label.append(dot,document.createTextNode(item.priority));priority.append(label);
+    label.className=`priority-label ${item.attention?item.priority.toLowerCase():'cerrado'}`;dot.className='priority-dot';dot.setAttribute('aria-hidden','true');label.append(dot,document.createTextNode(item.attention?item.priority:'Servido'));priority.append(label);
     row.append(priority,cell(item.order_id||'Sin referencia',true,item.line_id?`Línea ${item.line_id}`:item.kind==='unresolved_email'?'Correo sin vínculo':null),
       cell(item.client_name||'Sin identificar'),cell(number(item.pending),true,item.pending===null?'sin dato':'ud.'),cell(item.reason),cell(item.action));
     row.children[3].classList.add('numeric');
@@ -40,13 +45,16 @@ function renderRows(items){
 }
 
 async function loadCases(){
+  const request=++state.caseRequest;
   const params=new URLSearchParams({view:state.view,page:String(state.page)});
   if($('client').value)params.set('client',$('client').value);
   if($('priority').value)params.set('priority',$('priority').value);
   if($('search').value.trim())params.set('search',$('search').value.trim());
   const data=await api(`/api/cases?${params}`);
+  if(request!==state.caseRequest)return;
   $('empty').hidden=data.total>0;
-  $('range').textContent=data.total?`${(data.page-1)*data.page_size+1}–${Math.min(data.page*data.page_size,data.total)} de ${number(data.total)} casos`:'0 casos';
+  const noun=state.view==='records'?'registros':'casos';
+  $('range').textContent=data.total?`${(data.page-1)*data.page_size+1}–${Math.min(data.page*data.page_size,data.total)} de ${number(data.total)} ${noun}`:`0 ${noun}`;
   $('page-label').textContent=`Página ${data.page} de ${Math.max(1,Math.ceil(data.total/data.page_size))}`;
   $('prev').disabled=data.page<=1;$('next').disabled=data.page*data.page_size>=data.total;
   if(!data.items.some(item=>item.case_id===state.selected))state.selected=data.items[0]?.case_id||null;
@@ -56,10 +64,12 @@ async function loadCases(){
 }
 
 async function loadDetail(id){
+  const dataset=state.dataset;
   const data=await api(`/api/cases/${encodeURIComponent(id)}`);
+  if(id!==state.selected || dataset!==state.dataset)return;
   $('detail-title').textContent=data.order_id ? `${data.order_id}${data.line_id?' · línea '+data.line_id:''}` : `Correo ${data.emails?.[0]?.message_id||''}`;
   $('detail-item').textContent=[data.cliente,data.sku,data.color,data.talla].filter(Boolean).join(' · ');
-  $('detail-state').textContent=data.unresolved?'Sin correspondencia':data.issues?.some(x=>x.includes('verificar')||x.includes('contradictorios'))?'Revisión humana':data.requested_date?'Solicitud sin confirmar':data.priority==='Alta'?'Atención prioritaria':'Pendiente';
+  $('detail-state').textContent=!data.attention?'Servido':data.unresolved?'Sin correspondencia':data.issues?.some(x=>x.includes('verificar')||x.includes('contradictorios'))?'Revisión humana':data.requested_date?'Solicitud sin confirmar':data.priority==='Alta'?'Atención prioritaria':'Pendiente';
   $('detail-erp').textContent=formatDate(data.fecha_compromiso);
   $('detail-request').textContent=data.requested_date?formatDate(data.requested_date):'Sin cambio solicitado';
   $('detail-pending').textContent=data.pendientes===null?'Desconocido':`${number(data.pendientes)} de ${number(data.uds_pedidas)} ud.`;
@@ -85,10 +95,22 @@ async function showSection(section){
   $('queue-view').hidden=section==='runs';$('runs-view').hidden=section!=='runs';
   if(section==='runs'){await loadRuns();return}
   state.view=section==='unresolved'?'unresolved':'all';state.page=1;
-  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===state.view));
-  await loadCases();
+  await showView(state.view,true);
 }
-async function showView(view){state.view=view;state.page=1;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));await loadCases();}
+async function showView(view,fromSection=false){state.view=view;state.page=1;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.view===view));
+  if(!fromSection){state.section='queue';document.querySelectorAll('.rail-pill').forEach(x=>x.classList.toggle('active',x.dataset.section==='queue'))}
+  $('queue-description').textContent=view==='records'?'Todas las líneas de pedido y los correos sin correspondencia, incluso si ya no requieren atención.':view==='unresolved'?'Correos que requieren una asociación manual antes de actuar.':view==='high'?'Casos que necesitan atención prioritaria.':'Selecciona un caso para ver su justificación y siguiente paso.';
+  await loadCases();}
+
+async function changeDataset(){
+  const previous=state.dataset,next=$('dataset').value;
+  if(next===previous)return;
+  state.dataset=next;state.page=1;state.selected=null;state.caseRequest++;
+  $('dataset').disabled=true;notice(`Preparando ${next==='full'?'el conjunto completo':'la muestra'}… La primera carga puede tardar unos 20 segundos.`);
+  try{await loadSummary();await showSection('queue');history.replaceState(null,'',next==='full'?'?dataset=full':location.pathname);clearNotice()}
+  catch(error){state.dataset=previous;$('dataset').value=previous;notice(`No se pudo abrir el conjunto de datos: ${error.message}`,true)}
+  finally{$('dataset').disabled=false}
+}
 
 async function loadRuns(){
   const runs=await api('/api/runs');const body=$('run-rows');body.replaceChildren();
@@ -115,6 +137,7 @@ function wire(){
   document.querySelectorAll('.rail-pill').forEach(x=>x.addEventListener('click',()=>showSection(x.dataset.section).catch(e=>notice(e.message,true))));
   document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>showView(x.dataset.view).catch(e=>notice(e.message,true))));
   for(const id of ['client','priority'])$(id).addEventListener('change',()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))});
+  $('dataset').addEventListener('change',changeDataset);
   $('search').addEventListener('input',()=>{clearTimeout(state.searchTimer);state.searchTimer=setTimeout(()=>{state.page=1;loadCases().catch(e=>notice(e.message,true))},250)});
   $('prev').addEventListener('click',()=>{state.page--;loadCases().catch(e=>notice(e.message,true))});
   $('next').addEventListener('click',()=>{state.page++;loadCases().catch(e=>notice(e.message,true))});
