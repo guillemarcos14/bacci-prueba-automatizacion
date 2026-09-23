@@ -19,4 +19,5 @@
 | Hecha | Auditar aplicación completa | Correcciones y propuestas priorizadas en `docs/AUDIT.md` |
 | Hecha | Ajustar marca lateral y separación de vistas | Tipografía igual en «Bacci»/«Operations» y espacio de 8 px comprobados en escritorio |
 | Hecha | Pulir estética de escritorio | Inter local, iconos uniformes, jerarquía tipográfica, controles alineados y fechas legibles a 1280 px |
+| Hecha | Afinar tarjeta de caso y pestañas de vistas | Fecha solicitada explícita, motivo breve y píldora activa a toda la altura de la barra |
 | Pendiente | Grabar el vídeo final tras cerrar la plataforma | Petición expresa de Guillem: conservar de momento `demo-v4` |

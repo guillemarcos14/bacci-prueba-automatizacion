@@ -4,6 +4,8 @@ La imagen ERP/POS aportada por Guillem es la autoridad estética, no funcional. 
 
 La marca lateral presenta «Bacci» y «Operations» en dos líneas con el mismo tamaño y peso. La barra gris de vistas deja una separación de 8 px respecto a la tarjeta de trabajo.
 
+La píldora blanca de la vista activa («Cola de trabajo» o «Todos los registros») ocupa los 41 px de altura de la barra gris, con los extremos redondeados. En la tarjeta de caso, «Fecha solicitada» distingue una petición por correo de la fecha del ERP; «Qué sabemos» muestra primero el motivo concreto y la nota de verificación se mantiene bajo el siguiente paso.
+
 ## Acabado de escritorio
 
 La interfaz usa Inter Variable servida desde el propio proyecto (`bacci/web/InterVariable.woff2`, licencia OFL adjunta). La jerarquía tipográfica evita texto auxiliar diminuto: títulos de 16–20 px y cuerpo, tablas y etiquetas de 12–13 px. Los tres iconos de navegación comparten tamaño, trazo y remates. Se eliminó el avatar «BO» porque no representaba a un usuario ni ofrecía una acción.

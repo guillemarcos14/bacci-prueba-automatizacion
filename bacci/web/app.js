@@ -65,9 +65,9 @@ async function loadDetail(id){
   $('detail-item').textContent=[data.cliente,data.sku,data.color,data.talla].filter(Boolean).join(' · ');
   $('detail-state').textContent=data.label;
   $('detail-erp').textContent=formatDate(data.fecha_compromiso);
-  $('detail-request').textContent=data.requested_date?formatDate(data.requested_date):'Sin cambio solicitado';
+  $('detail-request').textContent=data.requested_date?formatDate(data.requested_date):'No se pidió otra fecha';
   $('detail-pending').textContent=data.pendientes===null?'Desconocido':`${number(data.pendientes)} de ${number(data.uds_pedidas)} ud.`;
-  $('detail-reason').textContent=data.reason+'. '+(data.kind==='line'?'El dato de pedido procede del ERP; los correos son peticiones o consultas, no cambios confirmados.':'El correo queda pendiente de asociación por una persona.');
+  $('detail-reason').textContent=data.reason;
   $('detail-action').textContent=data.action;
   const issues=$('detail-issues');issues.replaceChildren();
   for(const issue of data.issues||[]){const tag=document.createElement('span');tag.className='issue';tag.textContent=issue;issues.append(tag)}
