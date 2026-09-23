@@ -9,3 +9,5 @@ La aplicación no accede a Navision ni Outlook reales y no envía correos. Las d
 **Revisión posterior, 23/09/2026.** La interfaz y el servidor quedan fijados al conjunto completo; no existe selector ni subtítulo de volumen. «Prioridad alta» pasa a ser el filtro `Prioridad → Alta`, y «Sin resolver» tiene una única entrada en el menú lateral. «Ejecuciones» se llama ahora «Control de cargas». El correo `msg-13756` se ha contrastado con los XLSX originales y su procedencia consta en `docs/SOURCES.md`. La muestra permanece disponible únicamente para CLI y validación.
 
 La aplicación usa `data/operations.sqlite` para mantener su historial de cargas separado de los ensayos por CLI. El historial visible se inicializó limpiamente desde los XLSX originales; los ensayos previos en `data/full.sqlite` se conservaron localmente.
+
+**Revisión de comprensión, 23/09/2026.** Retirados los dos textos de marco solicitados. Control de cargas define sus tres contadores por lote. El filtro de prioridad se limita a casos activos para excluir «Servido». Se deja el vídeo `demo-v4` como material de la iteración anterior; se grabará uno final cuando la plataforma quede cerrada.

@@ -12,3 +12,5 @@
 | Hecha | Revisión de fondo, búsqueda y alcance | Pantalla completa, valores indexados y vista de registros |
 | Hecha | Fijar datos completos y eliminar navegación duplicada | Servidor full, «Alta» como filtro, «Sin resolver» solo lateral |
 | Hecha | Auditar procedencia de `msg-13756` | Fila 2622 de `Correos_full.xlsx`; pedido ausente de `Pedidos_full.xlsx` |
+| Hecha | Aclarar vistas, cargas y prioridad «Servido» | README, ayuda en pantalla y filtro Baja sin líneas servidas |
+| Pendiente | Grabar el vídeo final tras cerrar la plataforma | Petición expresa de Guillem: conservar de momento `demo-v4` |

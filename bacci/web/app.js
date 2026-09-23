@@ -99,7 +99,7 @@ async function showView(view,fromSection=false){state.view=view;state.page=1;doc
   if(view!=='records')$('search').value='';
   if(!fromSection){state.section='queue';document.querySelectorAll('.rail-pill').forEach(x=>x.classList.toggle('active',x.dataset.section==='queue'))}
   $('section-nav').hidden=false;$('queue-heading').textContent=view==='records'?'Todos los registros':'Cola de trabajo';
-  $('queue-description').textContent=view==='records'?'Líneas servidas y casos activos. Buscar recorre los datos de pedidos, clientes y correos.':'Casos activos de todas las prioridades. Usa el filtro para ver solo «Alta».';
+  $('queue-description').textContent=view==='records'?'Incluye líneas servidas. «Servido» es un estado y no aparece al filtrar por prioridad.':'Casos activos de todas las prioridades. Usa el filtro para ver solo «Alta».';
   await loadCases();}
 
 async function loadRuns(){

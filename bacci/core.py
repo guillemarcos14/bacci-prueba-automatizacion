@@ -498,6 +498,8 @@ def list_cases(db_path: Path, *, client: str | None = None, priority: str | None
             clauses.append("client_id=?")
             params.append(client)
         if priority:
+            # La prioridad solo tiene sentido para casos activos; «Servido» es un estado.
+            clauses.append("attention=1")
             clauses.append("priority=?")
             params.append(priority)
         if view == "unresolved":

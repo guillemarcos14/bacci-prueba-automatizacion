@@ -56,7 +56,7 @@ El alcance es un **prototipo local**. Herramientas libres. Puedes usar IA explic
 
 ![Vista de la cola operativa](docs/screenshots/desktop.png)
 
-La [demostración narrada](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v4/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 42 s. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
+La [demostración narrada de la iteración anterior](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v4/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 42 s. Se grabará el vídeo final cuando termine la revisión de la plataforma. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola.
 
 ## Ejecutar en local
 
@@ -103,6 +103,14 @@ Repite con `--dataset full` para el proceso manual completo. El arnés siempre c
 | Validaciones del arnés | 20/20 | 20/20 |
 
 La última duración medida de cada ejecución consta en [`reports/validation.json`](reports/validation.json) y se resume en [`reports/VALIDATION.md`](reports/VALIDATION.md): **0,09/0,06/0,06 s** con la muestra y **10,73/11,00/11,00 s** con el conjunto completo para inicial/actualización/repetición. Se mide de nuevo en cada máquina, sin presentarla como garantía de producción. En la actualización, la petición vigente de P-26002 pasa del 12/09 al 13/09; el acuse posterior no la cambia. La segunda pasada conserva el mismo `output_sha256` y los correos anteriores. El ERP sigue indicando su fecha original. La prioridad y sus motivos se detallan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
+
+### Qué cuenta cada vista
+
+Las 20.000 filas de pedidos del XLSX representan 19.400 líneas únicas identificadas por `pedido_id + linea_id`. **Cola de trabajo** reúne 16.854 líneas con algo que atender y 569 correos sin correspondencia, en total **17.423 casos**. **Todos los registros** añade las 2.546 líneas ya servidas: **19.969 registros**. **Sin resolver** muestra únicamente los 569 correos sin correspondencia fiable; ya están incluidos en las otras dos cifras y no se suman otra vez. Una línea servida es un estado, no una prioridad; al filtrar `Alta`, `Media` o `Baja` solo aparecen casos activos.
+
+### Qué controla cada carga
+
+Cada ejecución registra el corte, número de casos, tiempo y huella del resultado. **Nuevos** cuenta ID de mensaje válidos no vistos antes. **Repetidos** cuenta ID ya vistos cuyo contenido es idéntico; no vuelven a entrar. **Conflictos** cuenta ID existentes con contenido diferente y registros con ID o fecha de recepción inválidos; requieren revisión. Las cifras pertenecen al lote de esa fila, no son acumulados. En el lote entregado hay 3 nuevos y 2 repetidos; al repetirlo hay 0 nuevos y 5 repetidos. En un uso real, el responsable de operaciones podría detectar cortes incompletos o retrasados, mientras soporte investigaría conflictos y cambios inesperados de la huella. Este prototipo solo procesa los XLSX locales.
 
 Las filas idénticas se consolidan. Si dos filas de la misma línea discrepan, no se elige una arbitrariamente; las cantidades contradictorias o sobreexpedidas dejan el pendiente como desconocido y abren revisión. Las fechas vacías son desconocidas. Un correo sin referencia fiable genera un caso sin resolver. Las sugerencias por SKU nunca se vinculan automáticamente. Un contacto nuevo o remitente no coincidente requiere verificar identidad. Ninguna solicitud modifica el ERP por sí sola.
 

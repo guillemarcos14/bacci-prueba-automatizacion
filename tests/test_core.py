@@ -82,6 +82,9 @@ class UpdateSequenceTests(unittest.TestCase):
             # La cola mantiene solo trabajo pendiente, pero la consulta incluye líneas ya servidas.
             self.assertEqual(list_cases(db)["total"], 90)
             self.assertEqual(list_cases(db, view="records")["total"], 100)
+            low_priority = list_cases(db, view="records", priority="Baja", page_size=100)
+            self.assertTrue(low_priority["items"])
+            self.assertTrue(all(item["attention"] == 1 for item in low_priority["items"]))
             connection = sqlite3.connect(db)
             try:
                 served_id, served_order = connection.execute(

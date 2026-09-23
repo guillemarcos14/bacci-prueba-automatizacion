@@ -18,3 +18,5 @@
 | 23/09/2026 | Retirar pestañas duplicadas de prioridad alta y sin resolver | «Alta» ya se obtiene con el filtro de prioridad; «Sin resolver» tiene un acceso propio en el menú lateral. |
 | 23/09/2026 | Renombrar «Ejecuciones» como «Control de cargas» | Expresa su utilidad operativa: auditoría de importaciones e idempotencia. |
 | 23/09/2026 | Separar `operations.sqlite` de la base usada por ensayos CLI | Evita que ejecuciones de desarrollo con reglas anteriores contaminen el historial operativo visible; conserva esas pruebas para auditoría local. |
+| 23/09/2026 | Aplicar el filtro de prioridad solo a casos activos | «Servido» es un estado de línea, no prioridad baja; evita mezclar trabajo terminado con la cola. |
+| 23/09/2026 | Retirar textos de marco y explicar los conteos por lote en Control de cargas | Reduce ruido y hace legible el valor de nuevos, repetidos y conflictos. |

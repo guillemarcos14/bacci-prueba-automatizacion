@@ -17,7 +17,6 @@
         <button class="rail-pill" type="button" data-section="unresolved"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5.1.6c0 1.7-2.6 2.1-2.6 4"/><path d="M12 17h.01"/></svg>Sin resolver</button>
         <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Control de cargas</button>
       </nav>
-      <div class="rail-note"><span class="live-dot"></span>Prototipo local<br><span>Sin conexiones externas</span></div>
     </aside>
 
     <main class="content">
@@ -61,12 +60,16 @@
 
       <section id="runs-view" class="runs-section" aria-labelledby="runs-heading" hidden>
         <div class="runs-head"><div><h2 id="runs-heading">Control de cargas</h2><p>Historial para comprobar qué datos entraron, cuánto tardó el proceso y si el resultado cambió.</p></div><button id="update-button" class="lime-button" type="button">Incorporar lote de actualización</button></div>
-        <p class="runs-explainer">Cada fila registra un proceso con su corte, correos nuevos, reentregas, conflictos, casos y huella del resultado. El botón lee <strong>Correos_actualizacion.xlsx</strong> sin borrar los correos anteriores. Repetir el mismo lote debe añadir 0 mensajes y conservar la misma huella.</p>
+        <p class="runs-explainer">Esta pantalla permite saber si los correos de un lote entraron correctamente y si volver a procesarlo cambia la cola. Cada cifra corresponde a <strong>esa ejecución</strong>. El código de «Resultado» identifica la versión de la cola: si no cambia, la salida es idéntica. El botón lee <strong>Correos_actualizacion.xlsx</strong> y conserva los mensajes anteriores.</p>
+        <dl class="run-definitions">
+          <div><dt>Nuevos</dt><dd>Identificadores de mensaje no vistos antes; se incorporan.</dd></div>
+          <div><dt>Repetidos</dt><dd>Mismo identificador y contenido; se ignoran para evitar duplicados.</dd></div>
+          <div><dt>Conflictos</dt><dd>Identificador reutilizado con otro contenido o registro sin ID o fecha válidos; requieren revisión en el archivo de origen.</dd></div>
+        </dl>
         <div class="runs-table"><table><thead><tr><th>Ejecutado</th><th>Corte</th><th>Nuevos</th><th>Repetidos</th><th>Conflictos</th><th>Casos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody id="run-rows"></tbody></table></div>
         <div id="run-comparison" class="run-comparison"></div>
       </section>
 
-      <footer>Datos ficticios · Europa/Madrid · las peticiones por correo no modifican el ERP</footer>
     </main>
   </div>
 </body>
