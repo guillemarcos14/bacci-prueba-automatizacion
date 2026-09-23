@@ -2,6 +2,8 @@
 
 La imagen ERP/POS aportada por Guillem es la autoridad estética, no funcional. La aplicación usa un fondo gris suave a pantalla completa con degradado lila, azul y verde en la zona inferior; superficies blancas cálidas; texto grafito; navegación y pestañas en píldoras; lima pálido para sección y caso seleccionados. El ancho se adapta a la ventana para dar más espacio a la tabla y el detalle.
 
+La marca lateral presenta «Bacci» y «Operations» en dos líneas con el mismo tamaño y peso. La barra gris de vistas deja una separación de 8 px respecto a la tarjeta de trabajo.
+
 ## Traslado funcional
 
 La tabla principal concentra pedido/línea, cliente, unidades pendientes, motivo y acción. El detalle añade ERP frente a petición vigente, anomalías y correos concretos. «Sin resolver» y «Control de cargas» son vistas operativas, no elementos decorativos. La prioridad alta se obtiene con el filtro de la cola, sin una pestaña duplicada. No se reproducen POS, nóminas, ventas ni otros apartados de la referencia.

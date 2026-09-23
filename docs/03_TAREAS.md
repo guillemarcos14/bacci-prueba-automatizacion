@@ -17,4 +17,5 @@
 | Hecha | Unificar etiquetas, motivo y precedencia | `case_label`, `docs/PRIORITY.md` y pruebas de las seis categorías |
 | Hecha | Reparar y probar búsqueda libre | Prioridad/estado separados; palabras, números, fechas, tildes, CSV y filtros en tests y navegador |
 | Hecha | Auditar aplicación completa | Correcciones y propuestas priorizadas en `docs/AUDIT.md` |
+| Hecha | Ajustar marca lateral y separación de vistas | Tipografía igual en «Bacci»/«Operations» y espacio de 8 px comprobados en escritorio |
 | Pendiente | Grabar el vídeo final tras cerrar la plataforma | Petición expresa de Guillem: conservar de momento `demo-v4` |
