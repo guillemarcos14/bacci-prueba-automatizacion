@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#d2d3d6">
+  <title>Bacci Operaciones</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="workspace">
+    <aside class="rail" aria-label="Navegación">
+      <div class="brand"><svg class="brand-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 1v22M1 12h22M4.2 4.2l15.6 15.6M19.8 4.2 4.2 19.8"/></svg><span>Bacci <small>OPERACIONES</small></span></div>
+      <nav class="rail-items" aria-label="Secciones">
+        <button class="rail-pill active" type="button" data-section="queue"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Trabajo diario</button>
+        <button class="rail-pill" type="button" data-section="unresolved"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5.1.6c0 1.7-2.6 2.1-2.6 4"/><path d="M12 17h.01"/></svg>Sin resolver</button>
+        <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Ejecuciones</button>
+      </nav>
+      <div class="rail-note"><span class="live-dot"></span>Prototipo local<br><span>Sin conexiones externas</span></div>
+    </aside>
+
+    <main class="content">
+      <header class="app-top">
+        <div><h1>Operaciones, al día</h1><p>Pedidos y correos traducidos en trabajo concreto.</p></div>
+        <div class="top-tools"><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span><span class="avatar" aria-label="Bacci Operaciones">BO</span></div>
+      </header>
+
+      <div id="notice" class="notice" role="status" hidden></div>
+
+      <div id="queue-view">
+        <nav class="section-nav" aria-label="Vistas de trabajo">
+          <button class="tab active" type="button" data-view="all">Cola priorizada</button>
+          <button class="tab" type="button" data-view="high">Prioridad alta</button>
+          <button class="tab" type="button" data-view="unresolved">Sin resolver</button>
+          <span class="nav-explainer">Ordenado por urgencia y necesidad de decisión</span>
+        </nav>
+
+        <section class="table-section" aria-labelledby="queue-heading">
+          <div class="section-bar">
+            <div><h2 id="queue-heading">Cola de trabajo</h2><p id="queue-description">Selecciona un caso para ver su justificación y siguiente paso.</p></div>
+            <div class="filters">
+              <label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido o cliente" autocomplete="off">
+              <label for="client">Cliente</label><select id="client"><option value="">Todos</option></select>
+              <label for="priority">Prioridad</label><select id="priority"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baja</option></select>
+            </div>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>Prioridad</th><th>Pedido y línea</th><th>Cliente</th><th class="numeric">Pendiente</th><th>Motivo</th><th>Acción propuesta</th></tr></thead><tbody id="case-rows"></tbody></table></div>
+          <div id="empty" class="empty" hidden>No hay casos con estos filtros. Prueba otra combinación de búsqueda, cliente y prioridad.</div>
+          <div class="table-bottom"><span id="range">—</span><div class="pagination"><button id="prev" type="button">Anterior</button><span id="page-label">—</span><button id="next" type="button">Siguiente</button></div></div>
+        </section>
+
+        <section id="detail" class="detail" aria-live="polite" aria-labelledby="detail-title">
+          <div class="detail-head"><div><span class="detail-label">CASO SELECCIONADO</span><h2 id="detail-title">Selecciona un caso</h2><p id="detail-item">La evidencia aparecerá aquí.</p></div><span id="detail-state" class="state">—</span></div>
+          <div class="detail-columns">
+            <div class="detail-facts"><div class="fact"><span>Fecha en ERP</span><strong id="detail-erp">—</strong></div><div class="fact"><span>Solicitud vigente</span><strong id="detail-request">—</strong></div><div class="fact"><span>Por servir</span><strong id="detail-pending">—</strong></div></div>
+            <div class="detail-story"><h3>Qué sabemos</h3><p id="detail-reason">—</p><div id="detail-issues" class="issues"></div><div id="detail-evidence" class="evidence"></div></div>
+            <div class="detail-next"><span>SIGUIENTE PASO</span><strong id="detail-action">—</strong><p>La decisión y cualquier cambio en el ERP requieren verificación humana.</p></div>
+          </div>
+        </section>
+      </div>
+
+      <section id="runs-view" class="runs-section" aria-labelledby="runs-heading" hidden>
+        <div class="runs-head"><div><h2 id="runs-heading">Ejecuciones</h2><p>Comprueba el corte, las novedades incorporadas y las reentregas ignoradas.</p></div><button id="update-button" class="lime-button" type="button">Incorporar lote de actualización</button></div>
+        <p class="runs-explainer">La actualización lee <strong>Correos_actualizacion.xlsx</strong>, conserva los correos anteriores y recalcula los casos con los mismos pedidos. Repetirla debe añadir 0 mensajes y mantener el mismo resultado.</p>
+        <div class="runs-table"><table><thead><tr><th>Ejecutado</th><th>Corte</th><th>Nuevos</th><th>Repetidos</th><th>Conflictos</th><th>Casos</th><th>Tiempo</th><th>Resultado</th></tr></thead><tbody id="run-rows"></tbody></table></div>
+        <div id="run-comparison" class="run-comparison"></div>
+      </section>
+
+      <footer>Datos ficticios · Europa/Madrid · las peticiones por correo no modifican el ERP</footer>
+    </main>
+  </div>
+</body>
+</html>

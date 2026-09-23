@@ -1,0 +1,359 @@
+{
+  "generated_at": "2026-09-23T13:53:49",
+  "results": [
+    {
+      "dataset": "sample",
+      "passed": 20,
+      "total": 20,
+      "checks": [
+        {
+          "check": "Correos iniciales únicos",
+          "expected": 24,
+          "actual": 24,
+          "pass": true
+        },
+        {
+          "check": "Duplicados iniciales ignorados",
+          "expected": 1,
+          "actual": 1,
+          "pass": true
+        },
+        {
+          "check": "Mensajes nuevos del lote",
+          "expected": 3,
+          "actual": 3,
+          "pass": true
+        },
+        {
+          "check": "Reentregas del lote",
+          "expected": 2,
+          "actual": 2,
+          "pass": true
+        },
+        {
+          "check": "Mensajes nuevos al repetir",
+          "expected": 0,
+          "actual": 0,
+          "pass": true
+        },
+        {
+          "check": "Reentregas al repetir",
+          "expected": 5,
+          "actual": 5,
+          "pass": true
+        },
+        {
+          "check": "Digest estable tras repetición",
+          "expected": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
+          "actual": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
+          "pass": true
+        },
+        {
+          "check": "Corte inicial",
+          "expected": "2026-09-10T10:00",
+          "actual": "2026-09-10T10:00",
+          "pass": true
+        },
+        {
+          "check": "Corte actualizado",
+          "expected": "2026-09-10T11:00",
+          "actual": "2026-09-10T11:00",
+          "pass": true
+        },
+        {
+          "check": "P-26002 solicitud inicial",
+          "expected": "2026-09-12",
+          "actual": "2026-09-12",
+          "pass": true
+        },
+        {
+          "check": "P-26002 rectificación vigente",
+          "expected": "2026-09-13",
+          "actual": "2026-09-13",
+          "pass": true
+        },
+        {
+          "check": "Acuse no cambia la solicitud",
+          "expected": 4,
+          "actual": 4,
+          "pass": true
+        },
+        {
+          "check": "Pedido inexistente visible",
+          "expected": true,
+          "actual": true,
+          "pass": true
+        },
+        {
+          "check": "P-26004 pendiente",
+          "expected": 250,
+          "actual": 250,
+          "pass": true
+        },
+        {
+          "check": "P-26004 vencido",
+          "expected": true,
+          "actual": true,
+          "pass": true
+        },
+        {
+          "check": "Cancelación en línea expedida",
+          "expected": "Solicitud de cancelación",
+          "actual": "Solicitud de cancelación",
+          "pass": true
+        },
+        {
+          "check": "Líneas únicas del ERP",
+          "expected": 98,
+          "actual": 98,
+          "pass": true
+        },
+        {
+          "check": "Conflictos sin elegir fila",
+          "expected": null,
+          "actual": null,
+          "pass": true
+        },
+        {
+          "check": "Duplicado idéntico consolidado",
+          "expected": 300,
+          "actual": 300,
+          "pass": true
+        },
+        {
+          "check": "Sobreexpedición no negativa",
+          "expected": null,
+          "actual": null,
+          "pass": true
+        }
+      ],
+      "runs": [
+        {
+          "run_id": 1,
+          "dataset": "sample",
+          "as_of": "2026-09-10T10:00",
+          "added_messages": 24,
+          "repeated_messages": 1,
+          "conflicting_messages": 0,
+          "active_messages": 24,
+          "total_cases": 90,
+          "attention_cases": 90,
+          "unresolved_cases": 2,
+          "output_sha256": "3999816788cbf3ebd4c21e0f54a06583321cd20f0eabc9d04cdb4fe9ed3dd4c2",
+          "elapsed_ms": 89.59
+        },
+        {
+          "run_id": 2,
+          "dataset": "sample",
+          "as_of": "2026-09-10T11:00",
+          "added_messages": 3,
+          "repeated_messages": 2,
+          "conflicting_messages": 0,
+          "active_messages": 27,
+          "total_cases": 90,
+          "attention_cases": 90,
+          "unresolved_cases": 2,
+          "output_sha256": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
+          "elapsed_ms": 64.22
+        },
+        {
+          "run_id": 3,
+          "dataset": "sample",
+          "as_of": "2026-09-10T11:00",
+          "added_messages": 0,
+          "repeated_messages": 5,
+          "conflicting_messages": 0,
+          "active_messages": 27,
+          "total_cases": 90,
+          "attention_cases": 90,
+          "unresolved_cases": 2,
+          "output_sha256": "3349971f02e2deaf018ffa491a981af3eba5fa1cd49218492fe90d47fcc2b938",
+          "elapsed_ms": 63.72
+        }
+      ],
+      "changes": {
+        "new_messages": 3,
+        "p26002_requested_date_before": "2026-09-12",
+        "p26002_requested_date_after": "2026-09-13",
+        "stable_after_repeat": true
+      }
+    },
+    {
+      "dataset": "full",
+      "passed": 20,
+      "total": 20,
+      "checks": [
+        {
+          "check": "Correos iniciales únicos",
+          "expected": 3800,
+          "actual": 3800,
+          "pass": true
+        },
+        {
+          "check": "Duplicados iniciales ignorados",
+          "expected": 200,
+          "actual": 200,
+          "pass": true
+        },
+        {
+          "check": "Mensajes nuevos del lote",
+          "expected": 3,
+          "actual": 3,
+          "pass": true
+        },
+        {
+          "check": "Reentregas del lote",
+          "expected": 2,
+          "actual": 2,
+          "pass": true
+        },
+        {
+          "check": "Mensajes nuevos al repetir",
+          "expected": 0,
+          "actual": 0,
+          "pass": true
+        },
+        {
+          "check": "Reentregas al repetir",
+          "expected": 5,
+          "actual": 5,
+          "pass": true
+        },
+        {
+          "check": "Digest estable tras repetición",
+          "expected": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
+          "actual": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
+          "pass": true
+        },
+        {
+          "check": "Corte inicial",
+          "expected": "2026-09-10T10:00",
+          "actual": "2026-09-10T10:00",
+          "pass": true
+        },
+        {
+          "check": "Corte actualizado",
+          "expected": "2026-09-10T11:00",
+          "actual": "2026-09-10T11:00",
+          "pass": true
+        },
+        {
+          "check": "P-26002 solicitud inicial",
+          "expected": "2026-09-12",
+          "actual": "2026-09-12",
+          "pass": true
+        },
+        {
+          "check": "P-26002 rectificación vigente",
+          "expected": "2026-09-13",
+          "actual": "2026-09-13",
+          "pass": true
+        },
+        {
+          "check": "Acuse no cambia la solicitud",
+          "expected": 4,
+          "actual": 4,
+          "pass": true
+        },
+        {
+          "check": "Pedido inexistente visible",
+          "expected": true,
+          "actual": true,
+          "pass": true
+        },
+        {
+          "check": "P-26004 pendiente",
+          "expected": 250,
+          "actual": 250,
+          "pass": true
+        },
+        {
+          "check": "P-26004 vencido",
+          "expected": true,
+          "actual": true,
+          "pass": true
+        },
+        {
+          "check": "Cancelación en línea expedida",
+          "expected": "Solicitud de cancelación",
+          "actual": "Solicitud de cancelación",
+          "pass": true
+        },
+        {
+          "check": "Líneas únicas del ERP",
+          "expected": 19400,
+          "actual": 19400,
+          "pass": true
+        },
+        {
+          "check": "Conflictos sin elegir fila",
+          "expected": null,
+          "actual": null,
+          "pass": true
+        },
+        {
+          "check": "Duplicado idéntico consolidado",
+          "expected": 300,
+          "actual": 300,
+          "pass": true
+        },
+        {
+          "check": "Sobreexpedición no negativa",
+          "expected": null,
+          "actual": null,
+          "pass": true
+        }
+      ],
+      "runs": [
+        {
+          "run_id": 1,
+          "dataset": "full",
+          "as_of": "2026-09-10T10:00",
+          "added_messages": 3800,
+          "repeated_messages": 200,
+          "conflicting_messages": 0,
+          "active_messages": 3800,
+          "total_cases": 17423,
+          "attention_cases": 17423,
+          "unresolved_cases": 569,
+          "output_sha256": "b0e0fc7a07483e337030aa8b605a6c8ac63782dd9deea8a01737cac80fdef140",
+          "elapsed_ms": 9120.18
+        },
+        {
+          "run_id": 2,
+          "dataset": "full",
+          "as_of": "2026-09-10T11:00",
+          "added_messages": 3,
+          "repeated_messages": 2,
+          "conflicting_messages": 0,
+          "active_messages": 3803,
+          "total_cases": 17423,
+          "attention_cases": 17423,
+          "unresolved_cases": 569,
+          "output_sha256": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
+          "elapsed_ms": 8588.22
+        },
+        {
+          "run_id": 3,
+          "dataset": "full",
+          "as_of": "2026-09-10T11:00",
+          "added_messages": 0,
+          "repeated_messages": 5,
+          "conflicting_messages": 0,
+          "active_messages": 3803,
+          "total_cases": 17423,
+          "attention_cases": 17423,
+          "unresolved_cases": 569,
+          "output_sha256": "2e19baef16f05b453a7744faef33ba498184b55e2e050a0ab6db79fb9cd91319",
+          "elapsed_ms": 9059.28
+        }
+      ],
+      "changes": {
+        "new_messages": 3,
+        "p26002_requested_date_before": "2026-09-12",
+        "p26002_requested_date_after": "2026-09-13",
+        "stable_after_repeat": true
+      }
+    }
+  ]
+}

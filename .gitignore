@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+data/*.sqlite
+data/*.sqlite-shm
+data/*.sqlite-wal
+reports/validation-sample.json
+*.log
