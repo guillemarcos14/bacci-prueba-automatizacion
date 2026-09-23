@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-09-23T16:42:46",
+  "generated_at": "2026-09-23T18:24:04",
   "results": [
     {
       "dataset": "sample",
-      "passed": 20,
-      "total": 20,
+      "passed": 25,
+      "total": 25,
       "checks": [
         {
           "check": "Correos iniciales únicos",
@@ -44,8 +44,8 @@
         },
         {
           "check": "Digest estable tras repetición",
-          "expected": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
-          "actual": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
+          "expected": "3fa6a4e4027abea6681a4800e6fe7b737bdf6f327644ffd778d717590f21abc7",
+          "actual": "3fa6a4e4027abea6681a4800e6fe7b737bdf6f327644ffd778d717590f21abc7",
           "pass": true
         },
         {
@@ -76,6 +76,34 @@
           "check": "Acuse no cambia la solicitud",
           "expected": 4,
           "actual": 4,
+          "pass": true
+        },
+        {
+          "check": "Correo inicial conserva primera fila",
+          "expected": [
+            "Correos_muestra.xlsx",
+            "Correos",
+            6
+          ],
+          "actual": [
+            "Correos_muestra.xlsx",
+            "Correos",
+            6
+          ],
+          "pass": true
+        },
+        {
+          "check": "Correo nuevo conserva primera fila",
+          "expected": [
+            "Correos_actualizacion.xlsx",
+            "Correos",
+            5
+          ],
+          "actual": [
+            "Correos_actualizacion.xlsx",
+            "Correos",
+            5
+          ],
           "pass": true
         },
         {
@@ -125,6 +153,46 @@
           "expected": null,
           "actual": null,
           "pass": true
+        },
+        {
+          "check": "Filas ERP duplicadas localizables",
+          "expected": [
+            88,
+            95
+          ],
+          "actual": [
+            88,
+            95
+          ],
+          "pass": true
+        },
+        {
+          "check": "Filas ERP contradictorias localizables",
+          "expected": [
+            49,
+            96
+          ],
+          "actual": [
+            49,
+            96
+          ],
+          "pass": true
+        },
+        {
+          "check": "Cálculo visible y fuente conservada",
+          "expected": [
+            800,
+            0,
+            800,
+            84
+          ],
+          "actual": [
+            800,
+            0,
+            800,
+            84
+          ],
+          "pass": true
         }
       ],
       "runs": [
@@ -139,8 +207,8 @@
           "total_cases": 90,
           "attention_cases": 90,
           "unresolved_cases": 2,
-          "output_sha256": "01847fed2e92358bb7fbd3f0031168c40df1d4e36b5b4d87c37d9b712d797510",
-          "elapsed_ms": 95.75
+          "output_sha256": "b53b9748cbf5bec380a432d3cac4707427b42d58ea1ea3ec8ac0a18d08f8f645",
+          "elapsed_ms": 101.19
         },
         {
           "run_id": 2,
@@ -153,8 +221,8 @@
           "total_cases": 90,
           "attention_cases": 90,
           "unresolved_cases": 2,
-          "output_sha256": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
-          "elapsed_ms": 68.94
+          "output_sha256": "3fa6a4e4027abea6681a4800e6fe7b737bdf6f327644ffd778d717590f21abc7",
+          "elapsed_ms": 77.42
         },
         {
           "run_id": 3,
@@ -167,8 +235,8 @@
           "total_cases": 90,
           "attention_cases": 90,
           "unresolved_cases": 2,
-          "output_sha256": "7ed5c5befda99fcf8a1fa738db4ad288aa02be5284afd674aca123671c389292",
-          "elapsed_ms": 70.5
+          "output_sha256": "3fa6a4e4027abea6681a4800e6fe7b737bdf6f327644ffd778d717590f21abc7",
+          "elapsed_ms": 80.96
         }
       ],
       "changes": {
@@ -180,8 +248,8 @@
     },
     {
       "dataset": "full",
-      "passed": 20,
-      "total": 20,
+      "passed": 25,
+      "total": 25,
       "checks": [
         {
           "check": "Correos iniciales únicos",
@@ -221,8 +289,8 @@
         },
         {
           "check": "Digest estable tras repetición",
-          "expected": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
-          "actual": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
+          "expected": "c8d455edc5c5a0840e5c2735fcdad3effed3535d984f2f609a76e2823815a2c9",
+          "actual": "c8d455edc5c5a0840e5c2735fcdad3effed3535d984f2f609a76e2823815a2c9",
           "pass": true
         },
         {
@@ -253,6 +321,34 @@
           "check": "Acuse no cambia la solicitud",
           "expected": 4,
           "actual": 4,
+          "pass": true
+        },
+        {
+          "check": "Correo inicial conserva primera fila",
+          "expected": [
+            "Correos_full.xlsx",
+            "Correos",
+            1970
+          ],
+          "actual": [
+            "Correos_full.xlsx",
+            "Correos",
+            1970
+          ],
+          "pass": true
+        },
+        {
+          "check": "Correo nuevo conserva primera fila",
+          "expected": [
+            "Correos_actualizacion.xlsx",
+            "Correos",
+            5
+          ],
+          "actual": [
+            "Correos_actualizacion.xlsx",
+            "Correos",
+            5
+          ],
           "pass": true
         },
         {
@@ -302,6 +398,46 @@
           "expected": null,
           "actual": null,
           "pass": true
+        },
+        {
+          "check": "Filas ERP duplicadas localizables",
+          "expected": [
+            7248,
+            12350
+          ],
+          "actual": [
+            7248,
+            12350
+          ],
+          "pass": true
+        },
+        {
+          "check": "Filas ERP contradictorias localizables",
+          "expected": [
+            11164,
+            18936
+          ],
+          "actual": [
+            11164,
+            18936
+          ],
+          "pass": true
+        },
+        {
+          "check": "Cálculo visible y fuente conservada",
+          "expected": [
+            800,
+            0,
+            800,
+            1865
+          ],
+          "actual": [
+            800,
+            0,
+            800,
+            1865
+          ],
+          "pass": true
         }
       ],
       "runs": [
@@ -316,8 +452,8 @@
           "total_cases": 17423,
           "attention_cases": 17423,
           "unresolved_cases": 569,
-          "output_sha256": "4dcc9374855555e1f86923a34a56a8451debc25bd38ac00f39b4730099079a0c",
-          "elapsed_ms": 14523.57
+          "output_sha256": "688c34267182af6b1d6d7bbbfffddb721e772b995ae84be2667d96a1b48e583d",
+          "elapsed_ms": 12079.88
         },
         {
           "run_id": 2,
@@ -330,8 +466,8 @@
           "total_cases": 17423,
           "attention_cases": 17423,
           "unresolved_cases": 569,
-          "output_sha256": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
-          "elapsed_ms": 14804.97
+          "output_sha256": "c8d455edc5c5a0840e5c2735fcdad3effed3535d984f2f609a76e2823815a2c9",
+          "elapsed_ms": 11917.71
         },
         {
           "run_id": 3,
@@ -344,8 +480,8 @@
           "total_cases": 17423,
           "attention_cases": 17423,
           "unresolved_cases": 569,
-          "output_sha256": "d8d2a7cbef596fb1583bcd7637a571c98c20ef4d58b5559e445191e9f6056f7c",
-          "elapsed_ms": 13974.36
+          "output_sha256": "c8d455edc5c5a0840e5c2735fcdad3effed3535d984f2f609a76e2823815a2c9",
+          "elapsed_ms": 11543.42
         }
       ],
       "changes": {

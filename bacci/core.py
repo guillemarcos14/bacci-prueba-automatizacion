@@ -102,7 +102,13 @@ def load_sheet(path: Path, sheet: str) -> list[dict[str, Any]]:
         if len(set(headers)) != len(headers) or not REQUIRED_COLUMNS[sheet].issubset(set(headers)):
             missing = sorted(REQUIRED_COLUMNS[sheet] - set(headers))
             raise ValueError(f"{path.name}: columnas duplicadas o ausentes en {sheet}: {missing}")
-        return [dict(zip(headers, row)) for row in rows if any(cell is not None for cell in row)]
+        result = []
+        for sheet_row, row in enumerate(rows, start=2):
+            if any(cell is not None for cell in row):
+                item = dict(zip(headers, row))
+                item.update(__source_file=path.name, __source_sheet=sheet, __source_row=sheet_row)
+                result.append(item)
+        return result
     finally:
         workbook.close()
 
@@ -216,7 +222,8 @@ def connect(path: Path) -> sqlite3.Connection:
     connection.executescript("""
         CREATE TABLE IF NOT EXISTS messages (
           message_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL, received_at TEXT,
-          sender TEXT, recipient TEXT, subject TEXT, body TEXT
+          sender TEXT, recipient TEXT, subject TEXT, body TEXT,
+          source_file TEXT, source_sheet TEXT, source_row INTEGER
         );
         CREATE TABLE IF NOT EXISTS cases (
           case_id TEXT PRIMARY KEY, kind TEXT NOT NULL, order_id TEXT, line_id TEXT,
@@ -238,6 +245,10 @@ def connect(path: Path) -> sqlite3.Connection:
     """)
     if "search_text" not in {row[1] for row in connection.execute("PRAGMA table_info(cases)")}:
         connection.execute("ALTER TABLE cases ADD COLUMN search_text TEXT NOT NULL DEFAULT ''")
+    message_columns = {row[1] for row in connection.execute("PRAGMA table_info(messages)")}
+    for column, kind in (("source_file", "TEXT"), ("source_sheet", "TEXT"), ("source_row", "INTEGER")):
+        if column not in message_columns:
+            connection.execute(f"ALTER TABLE messages ADD COLUMN {column} {kind}")
     return connection
 
 
@@ -255,8 +266,12 @@ def build_lines(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
     by_order: dict[str, list[str]] = defaultdict(list)
     for key, group in groups.items():
         order_id, line_id = key.split(":", 1)
-        variants = {canonical_json({k: plain(v) for k, v in row.items()}) for row in group}
-        fields = {field: _consensus(group, field) for field in group[0]}
+        # La posición física permite auditar el origen, pero no convierte dos
+        # copias idénticas de una línea en versiones contradictorias.
+        variants = {canonical_json({k: plain(v) for k, v in row.items() if not k.startswith("__source_")})
+                    for row in group}
+        fields = {field: _consensus(group, field) for field in group[0]
+                  if not field.startswith("__source_")}
         ordered = fields.get("uds_pedidas")
         shipped = fields.get("uds_enviadas")
         issues: list[str] = []
@@ -309,7 +324,9 @@ def build_cases(order_rows: list[dict[str, Any]], customer_rows: list[dict[str, 
         links, issues = extract_references(msg["subject"] or "", msg["body"] or "", by_order)
         evidence = {"message_id": msg["message_id"], "received_at": msg["received_at"], "from": msg["sender"],
                     "to": msg["recipient"], "subject": msg["subject"], "body": msg["body"], "intent": intent,
-                    "requested_date": requested, "supersedes": supersedes, "links": links}
+                    "requested_date": requested, "supersedes": supersedes, "links": links,
+                    "source_file": msg.get("source_file"), "source_sheet": msg.get("source_sheet"),
+                    "source_row": msg.get("source_row")}
         for link in links:
             key = link["case_id"].removeprefix("line:")
             line = lines[key]
@@ -451,6 +468,24 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
         existing = {row["message_id"]: row["payload_hash"] for row in connection.execute("SELECT message_id,payload_hash FROM messages")}
         added = repeated = conflicting = 0
         with connection:
+            # Bases creadas antes de guardar procedencia: recuperar el primer
+            # archivo/fila cuyo contenido coincide, sin cambiar el correo.
+            if connection.execute("SELECT 1 FROM messages WHERE source_file IS NULL LIMIT 1").fetchone():
+                initial_name = "Correos_muestra.xlsx" if dataset == "sample" else "Correos_full.xlsx"
+                for source_path in (orders_path.parent / initial_name, orders_path.parent / "Correos_actualizacion.xlsx"):
+                    if not source_path.exists():
+                        continue
+                    for source in load_sheet(source_path, "Correos"):
+                        mid = str(source.get("message_id") or "").strip().lower()
+                        if mid not in existing or not isinstance(source.get("received_at"), datetime):
+                            continue
+                        payload = {"received_at": plain(source["received_at"]), "sender": source.get("from") or "",
+                                   "recipient": source.get("to") or "", "subject": source.get("subject") or "",
+                                   "body": source.get("body") or ""}
+                        if digest(payload) == existing[mid]:
+                            connection.execute("""UPDATE messages SET source_file=?,source_sheet=?,source_row=?
+                              WHERE message_id=? AND source_file IS NULL""",
+                              (source["__source_file"], source["__source_sheet"], source["__source_row"], mid))
             for row in email_rows:
                 mid = str(row.get("message_id") or "").strip().lower()
                 if not mid:
@@ -469,11 +504,15 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
                     else:
                         conflicting += 1
                     continue
-                connection.execute("INSERT INTO messages VALUES (?,?,?,?,?,?,?)", (mid, fingerprint, payload["received_at"],
-                                   payload["sender"], payload["recipient"], payload["subject"], payload["body"]))
+                connection.execute("""INSERT INTO messages
+                  (message_id,payload_hash,received_at,sender,recipient,subject,body,source_file,source_sheet,source_row)
+                  VALUES (?,?,?,?,?,?,?,?,?,?)""", (mid, fingerprint, payload["received_at"], payload["sender"],
+                  payload["recipient"], payload["subject"], payload["body"], row["__source_file"],
+                  row["__source_sheet"], row["__source_row"]))
                 existing[mid] = fingerprint
                 added += 1
-            messages = [dict(row) for row in connection.execute("SELECT message_id,received_at,sender,recipient,subject,body FROM messages")]
+            messages = [dict(row) for row in connection.execute("""SELECT message_id,received_at,sender,recipient,subject,body,
+              source_file,source_sheet,source_row FROM messages""")]
             all_cases = build_cases(order_rows, customer_rows, messages, as_of, include_inactive=True)
             cases = [case for case in all_cases if case["attention"]]
             customer_emails = {str(row.get("cliente_id")): row.get("email") or "" for row in customer_rows}
@@ -497,7 +536,7 @@ def run_import(db_path: Path, dataset: str, orders_path: Path, email_path: Path,
                repeated, conflicting, active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases),
                output_sha, elapsed, datetime.now().isoformat(timespec="seconds")))
             run_id = cursor.lastrowid
-            connection.execute("PRAGMA user_version=3")
+            connection.execute("PRAGMA user_version=5")
         return RunResult(run_id, dataset, as_of.isoformat(timespec="minutes"), added, repeated, conflicting,
                          active_count, len(cases), len(cases), sum(c["unresolved"] for c in cases), output_sha, elapsed)
     finally:

@@ -66,19 +66,51 @@ async function loadDetail(id){
   $('detail-state').textContent=data.label;
   $('detail-erp').textContent=formatDate(data.fecha_compromiso);
   $('detail-request').textContent=data.requested_date?formatDate(data.requested_date):'No se pidió otra fecha';
-  $('detail-pending').textContent=data.pendientes===null?'Desconocido':`${number(data.pendientes)} de ${number(data.uds_pedidas)} ud.`;
+  $('detail-ordered').textContent=data.uds_pedidas===null?'Desconocidas':`${number(data.uds_pedidas)} ud.`;
+  $('detail-shipped').textContent=data.uds_enviadas===null?'Desconocidas':`${number(data.uds_enviadas)} ud.`;
+  $('detail-pending').textContent=data.pendientes===null?'Desconocido':`${number(data.pendientes)} ud.`;
   $('detail-reason').textContent=data.reason;
   $('detail-action').textContent=data.action;
   const issues=$('detail-issues');issues.replaceChildren();
   for(const issue of data.issues||[]){const tag=document.createElement('span');tag.className='issue';tag.textContent=issue;issues.append(tag)}
   if(data.request_conflict){const tag=document.createElement('span');tag.className='issue';tag.textContent='Peticiones activas múltiples';issues.append(tag)}
+  const source=$('detail-source');source.replaceChildren();
+  if(data.source_rows?.length){
+    const details=document.createElement('details'),head=document.createElement('summary');
+    head.textContent=`Filas originales del ERP (${data.source_rows.length})`;
+    details.append(head);
+    const fields=[['pedido_id','Pedido'],['linea_id','Línea'],['cliente_id','Cliente ID'],['sku','SKU'],
+      ['color','Color'],['talla','Talla'],['uds_pedidas','Pedidas'],['uds_enviadas','Enviadas acumuladas'],
+      ['precio_unitario_eur','Precio unitario EUR'],['fecha_compromiso','Compromiso ERP']];
+    for(const row of data.source_rows){
+      const item=document.createElement('div'),location=document.createElement('strong'),values=document.createElement('dl');
+      item.className='source-row';
+      location.textContent=`${row.__source_file||'Archivo de pedidos'} · ${row.__source_sheet||'Pedidos'} · fila ${row.__source_row??'sin dato'}`;
+      for(const [key,label] of fields){
+        const pair=document.createElement('div'),term=document.createElement('dt'),value=document.createElement('dd');
+        term.textContent=label;
+        const raw=row[key];
+        value.textContent=raw===null||raw===undefined||raw===''?'Sin dato':
+          key==='fecha_compromiso'?formatDate(raw):String(raw);
+        pair.append(term,value);values.append(pair);
+      }
+      item.append(location,values);details.append(item);
+    }
+    source.append(details);
+  }
   const evidence=$('detail-evidence');evidence.replaceChildren();
   if(!data.emails?.length){const p=document.createElement('p');p.textContent='Sin correos relacionados. Motivo calculado con los datos del ERP.';evidence.append(p)}
   for(const mail of [...(data.emails||[])].reverse()){
-    const details=document.createElement('details'),head=document.createElement('summary'),bold=document.createElement('b'),body=document.createElement('p');
-    bold.textContent=`${mail.received_at.slice(11,16)} · ${mail.message_id}`;
+    const details=document.createElement('details'),head=document.createElement('summary'),bold=document.createElement('b'),meta=document.createElement('p'),body=document.createElement('p');
+    bold.textContent=`${compactDateTime(mail.received_at)} · ${mail.message_id}`;
     head.append(bold,document.createTextNode(` · ${mail.subject||mail.intent}`));
-    body.textContent=mail.body||'(sin cuerpo)';details.append(head,body);evidence.append(details);
+    meta.className='evidence-meta';
+    meta.textContent=[mail.source_file?`${mail.source_file} · ${mail.source_sheet||'Correos'} · fila ${mail.source_row??'sin dato'}`:null,
+      `De ${mail.from||'sin dato'}`,`Para ${mail.to||'sin dato'}`,
+      mail.match?`Vínculo: ${mail.match}`:null,
+      mail.requested_date?`Fecha solicitada: ${formatDate(mail.requested_date)}`:null,
+      mail.supersedes?`Rectifica ${mail.supersedes}`:null].filter(Boolean).join(' · ');
+    body.textContent=mail.body||'(sin cuerpo)';details.append(head,meta,body);evidence.append(details);
   }
   if(data.suggestions?.length){const p=document.createElement('p');p.textContent=`Posibles líneas para revisar: ${data.suggestions.join(', ')}. Ninguna se ha asociado automáticamente.`;evidence.append(p)}
 }

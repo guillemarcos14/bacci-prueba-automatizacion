@@ -4,6 +4,8 @@ import sqlite3
 from datetime import datetime
 from pathlib import Path
 
+from openpyxl import load_workbook
+
 from bacci.core import (INITIAL_CUTOFF, UPDATE_CUTOFF, build_lines, case_label, classify_email,
                         extract_references, get_case, list_cases, load_sheet, run_import)
 
@@ -24,6 +26,18 @@ class SourceAndCalculationTests(unittest.TestCase):
         exact = self.lines["P-26003:10000"]
         self.assertEqual(exact["pendientes"], 300)
         self.assertIn("duplicado idéntico consolidado", exact["issues"])
+
+    def test_source_rows_keep_physical_provenance_without_creating_conflicts(self):
+        exact = self.lines["P-26003:10000"]
+        self.assertEqual([row["__source_row"] for row in exact["source_rows"]], [88, 95])
+        self.assertEqual({row["__source_file"] for row in exact["source_rows"]}, {"Pedidos_muestra.xlsx"})
+        self.assertEqual({row["__source_sheet"] for row in exact["source_rows"]}, {"Pedidos"})
+        self.assertEqual([(row["uds_pedidas"], row["uds_enviadas"]) for row in exact["source_rows"]],
+                         [(400, 100), (400, 100)])
+        conflict = self.lines["P-26009:10000"]
+        self.assertEqual([row["__source_row"] for row in conflict["source_rows"]], [49, 96])
+        self.assertEqual([row["uds_pedidas"] for row in conflict["source_rows"]], [500, 450])
+        self.assertIsNone(conflict["pendientes"])
 
     def test_over_shipment_is_exception_not_negative_backlog(self):
         line = self.lines["P-26008:10000"]
@@ -87,6 +101,13 @@ class UpdateSequenceTests(unittest.TestCase):
             self.assertEqual(updated.repeated_messages, 2)
             self.assertEqual(after["requested_date"], "2026-09-13")
             self.assertEqual(len(after["emails"]), 4)
+            email_sources = {mail["message_id"]: (mail["source_file"], mail["source_sheet"], mail["source_row"])
+                             for mail in after["emails"]}
+            self.assertEqual(email_sources["msg-001"], ("Correos_muestra.xlsx", "Correos", 6))
+            self.assertEqual(email_sources["msg-20001"], ("Correos_actualizacion.xlsx", "Correos", 5))
+            self.assertEqual(after["source_rows"][0]["__source_row"], 84)
+            self.assertEqual((after["uds_pedidas"], after["uds_enviadas"], after["pendientes"]),
+                             (800, 0, 800))
             self.assertNotEqual(initial.output_sha256, updated.output_sha256)
 
             repeated = run_import(db, "sample", orders, ROOT / "Correos_actualizacion.xlsx", UPDATE_CUTOFF)
@@ -94,6 +115,36 @@ class UpdateSequenceTests(unittest.TestCase):
             self.assertEqual(repeated.repeated_messages, 5)
             self.assertEqual(repeated.output_sha256, updated.output_sha256)
             self.assertEqual(list_cases(db, view="unresolved")["total"], updated.unresolved_cases)
+
+            # Una base anterior sin procedencia recupera el primer origen real,
+            # también si el mensaje reaparece en el lote de actualización.
+            connection = sqlite3.connect(db)
+            try:
+                connection.execute("""UPDATE messages SET source_file=NULL,source_sheet=NULL,source_row=NULL
+                  WHERE message_id IN ('msg-001','msg-20001')""")
+                connection.commit()
+            finally:
+                connection.close()
+            migrated = run_import(db, "sample", orders, ROOT / "Correos_actualizacion.xlsx", UPDATE_CUTOFF)
+            self.assertEqual(migrated.output_sha256, updated.output_sha256)
+            migrated_emails = {mail["message_id"]: (mail["source_file"], mail["source_row"])
+                               for mail in get_case(db, "line:P-26002:10000")["emails"]}
+            self.assertEqual(migrated_emails["msg-001"], ("Correos_muestra.xlsx", 6))
+            self.assertEqual(migrated_emails["msg-20001"], ("Correos_actualizacion.xlsx", 5))
+
+            changed_batch = Path(folder) / "Correos_cambiados.xlsx"
+            workbook = load_workbook(ROOT / "Correos_actualizacion.xlsx")
+            workbook["Correos"]["F5"] = "Contenido distinto con el mismo message_id"
+            workbook["Correos"]["F6"] = "Contenido distinto con el mismo message_id"
+            workbook.save(changed_batch)
+            workbook.close()
+            conflicted = run_import(db, "sample", orders, changed_batch, UPDATE_CUTOFF)
+            self.assertEqual((conflicted.added_messages, conflicted.conflicting_messages), (0, 2))
+            self.assertEqual(conflicted.output_sha256, updated.output_sha256)
+            retained = next(mail for mail in get_case(db, "line:P-26002:10000")["emails"]
+                            if mail["message_id"] == "msg-20001")
+            self.assertEqual((retained["source_file"], retained["source_row"]),
+                             ("Correos_actualizacion.xlsx", 5))
 
             # La cola mantiene solo trabajo pendiente, pero la consulta incluye líneas ya servidas.
             self.assertEqual(list_cases(db)["total"], 90)

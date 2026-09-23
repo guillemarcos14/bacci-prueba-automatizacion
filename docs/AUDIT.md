@@ -20,3 +20,7 @@ Se revisaron motor de ingesta y clasificación, base SQLite, API local, interfaz
 4. **P2 · Índice de texto especializado si crece el volumen.** Medir consultas sobre archivos reales de operación y considerar FTS de SQLite; el prototipo usa `LIKE` sobre 19.969 registros y no promete un tiempo de búsqueda de producción.
 
 Las conexiones reales, stock, capacidad logística, autorización de contactos y el vídeo final siguen sujetos a las fuentes y decisiones de Bacci. Esta auditoría no los simula ni afirma haberlos validado.
+
+## Cierre funcional posterior · 23/09/2026
+
+El detalle ahora expone pedidas, enviadas acumuladas y pendientes junto a cada fila original del ERP (archivo, hoja y fila). Los correos muestran la primera fila de origen, remitente, destinatario y texto completo. La migración recupera la procedencia de mensajes ya almacenados contrastando su huella. La batería actual pasa 25/25 oráculos por conjunto y 7 pruebas unitarias; `reports/VALIDATION.md` recoge la evidencia actual. El vídeo final continúa pendiente.

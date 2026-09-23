@@ -13,6 +13,7 @@ El arnés crea bases temporales limpias para cada tamaño de datos; ejecuta el c
 
 - Cálculo: P-26004 tiene 250 pendientes; P-26003 tiene 300 tras consolidar duplicado idéntico; P-26009 conserva pendiente desconocido por contradicción; P-26008 no muestra backlog negativo por sobreexpedición.
 - Correo: P-26002 muestra 12/09 inicialmente, 13/09 tras la actualización, cuatro correos vinculados y el ERP intacto; P-99999 queda sin resolver; la cancelación de P-26001/20000 aparece aun con 0 pendientes.
+- Procedencia: cada fila de pedidos conserva archivo, hoja y número de fila; los correos repetidos mantienen la ubicación de la primera entrega; el detalle conserva pedidas, enviadas acumuladas y pendientes.
 - Idempotencia: muestra 24 correos iniciales únicos, completo 3.800, lote +3, segunda pasada +0, digest idéntico entre las dos últimas pasadas.
 - Rendimiento: tres duraciones por conjunto, medidas en esta máquina y guardadas en el informe; son una observación, no un SLA de producción.
 

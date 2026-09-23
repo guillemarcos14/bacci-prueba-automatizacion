@@ -68,7 +68,7 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m bacci serve
 ```
 
-Abre `http://127.0.0.1:8765`. La aplicación usa **siempre el conjunto completo**. La primera ejecución crea `data/operations.sqlite`, incorpora el lote de actualización y deja la vista en el corte de las 11:00; puede tardar unos 20 segundos. Esta base de la aplicación está separada de las bases usadas por los comandos de prueba. El servidor solo escucha en `127.0.0.1`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
+Abre `http://127.0.0.1:8765`. La aplicación usa **siempre el conjunto completo**. La primera ejecución crea `data/operations.sqlite`, incorpora el lote de actualización y deja la vista en el corte de las 11:00; puede tardar unos 25 segundos. Esta base de la aplicación está separada de las bases usadas por los comandos de prueba. El servidor solo escucha en `127.0.0.1`. En Linux/macOS sustituye `\.venv\Scripts\python.exe` por `.venv/bin/python`.
 
 La cola muestra todos los casos activos, ordenados por urgencia. Para ver solo los de prioridad alta se usa el filtro **Prioridad → Alta**. La búsqueda recorre los valores de pedidos, líneas, maestro de clientes y correos vinculados: referencias, SKU, color, talla, cantidades, fechas, direcciones, asunto y cuerpo. Ignora mayúsculas y tildes, admite fechas `dd/mm/aaaa` e ISO y exige que coincidan todas las palabras escritas. Los términos `alta`, `media` y `baja` buscan la prioridad de casos activos; `servido` busca solo líneas servidas. Al escribir abre **Todos los registros**. Los filtros de cliente y prioridad siguen aplicándose si están seleccionados. «Sin resolver» existe solo en el menú lateral y muestra correos sin vínculo fiable. «Control de cargas» registra cada procesamiento, permite repetir el lote y comparar novedades, reentregas, tiempo y huella del resultado.
 
@@ -100,9 +100,9 @@ Repite con `--dataset full` para el proceso manual completo. El arnés siempre c
 | Casos operativos tras el lote | 90 | 17.423 |
 | Casos sin resolver | 2 | 569 |
 | Registros consultables, incluidas líneas servidas | 100 | 19.969 |
-| Validaciones del arnés | 20/20 | 20/20 |
+| Validaciones del arnés | 25/25 | 25/25 |
 
-La última duración medida de cada ejecución consta en [`reports/validation.json`](reports/validation.json) y se resume en [`reports/VALIDATION.md`](reports/VALIDATION.md): **0,10/0,07/0,07 s** con la muestra y **14,52/14,80/13,97 s** con el conjunto completo para inicial/actualización/repetición. Se mide de nuevo en cada máquina, sin presentarla como garantía de producción. En la actualización, la petición vigente de P-26002 pasa del 12/09 al 13/09; el acuse posterior no la cambia. La segunda pasada conserva el mismo `output_sha256` y los correos anteriores. El ERP sigue indicando su fecha original. La prioridad y sus motivos se detallan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
+La última duración medida de cada ejecución consta en [`reports/validation.json`](reports/validation.json) y se resume en [`reports/VALIDATION.md`](reports/VALIDATION.md): **0,10/0,08/0,08 s** con la muestra y **12,08/11,92/11,54 s** con el conjunto completo para inicial/actualización/repetición. Se mide de nuevo en cada máquina, sin presentarla como garantía de producción. En la actualización, la petición vigente de P-26002 pasa del 12/09 al 13/09; el acuse posterior no la cambia. La segunda pasada conserva el mismo `output_sha256` y los correos anteriores. El ERP sigue indicando su fecha original. La prioridad y sus motivos se detallan en [`docs/PRIORITY.md`](docs/PRIORITY.md).
 
 ### Qué cuenta cada vista
 
@@ -118,11 +118,11 @@ Las filas idénticas se consolidan. Si dos filas de la misma línea discrepan, n
 
 Los pedidos, clientes y mensajes se leen de los XLSX entregados en el enunciado; la aplicación no inventa filas ni correos. Por ejemplo, `msg-13756` está en `Correos_full.xlsx`, hoja `Correos`, fila 2622, a las 23:36 del 09/09/2026. Menciona `P-X003756 / 10000`, referencia ausente de `Pedidos_full.xlsx`; por eso aparece en «Sin resolver». Los dominios `.example` pertenecen a los datos ficticios de la prueba, no a sistemas de producción.
 
-La plataforma sí **genera** información derivada: unidades pendientes, prioridad, motivo resumido, acción propuesta, correspondencia o falta de ella, posibles líneas para investigar, tiempos, conteos y huellas de las ejecuciones. También son diseño nuestro los textos de interfaz y el símbolo gráfico de «Bacci Operaciones». Cada detalle conserva el correo original y la procedencia de la línea ERP para poder contrastar esas conclusiones.
+La plataforma sí **genera** información derivada: unidades pendientes, prioridad, motivo resumido, acción propuesta, correspondencia o falta de ella, posibles líneas para investigar, tiempos, conteos y huellas de las ejecuciones. También son diseño nuestro los textos de interfaz y el símbolo gráfico de «Bacci Operaciones». El detalle muestra unidades pedidas, enviadas acumuladas y pendientes, además de las filas originales del ERP con archivo, hoja y número de fila. Cada correo conserva remitente, destinatario, texto, `message_id` y su primera ubicación física en los XLSX. Así se pueden contrastar las conclusiones sin interpretar un duplicado como un movimiento de stock.
 
 ## Validación y mantenimiento
 
-[`docs/HARNESS_ENGINEERING.md`](docs/HARNESS_ENGINEERING.md) explica los oráculos, límites y comandos; [`docs/LOOP_ENGINEERING.md`](docs/LOOP_ENGINEERING.md) define el ciclo y sus invariantes. Las pruebas cubren cálculo, duplicados, sobreexpedición, negaciones, rectificaciones, correos multilínea, referencias inválidas e idempotencia. El caso de una fecha `12/09/2026` que se confundía con `linea_id=2026` se detectó en revisión y quedó fijado por una prueba específica.
+[`docs/HARNESS_ENGINEERING.md`](docs/HARNESS_ENGINEERING.md) explica los oráculos, límites y comandos; [`docs/LOOP_ENGINEERING.md`](docs/LOOP_ENGINEERING.md) define el ciclo y sus invariantes. Las pruebas cubren cálculo, duplicados, sobreexpedición, negaciones, rectificaciones, correos multilínea, referencias inválidas, procedencia física de las filas e idempotencia. El caso de una fecha `12/09/2026` que se confundía con `linea_id=2026` se detectó en revisión y quedó fijado por una prueba específica.
 
 La estructura de trabajo está en [`AGENTS.md`](AGENTS.md), [`SKILLS.md`](SKILLS.md) y los documentos de estado, decisiones, tareas y aprendizajes en [`docs/`](docs/). [`docs/AUDIT.md`](docs/AUDIT.md) recoge la auditoría global y las mejoras priorizadas. Cada cambio de regla debe empezar por un resultado esperado y terminar con arnés y evidencia. Se utilizó IA para ayudar a implementar y revisar, pero los cálculos y cruces se comprobaron contra casos conocidos y contra el conjunto completo; la IA no toma decisiones de stock, logística ni autorización de contactos.
 

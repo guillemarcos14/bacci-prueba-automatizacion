@@ -12,3 +12,4 @@
 - El filtro de prioridad no bastaba: el índice de búsqueda aún incluía la prioridad interna `Baja` de líneas servidas. La búsqueda de `baja` y `servido` debe usar estado y prioridad visibles, incluso en Todos los registros.
 - La etiqueta del detalle necesita una regla propia y única en el motor. «Revisión humana» puede coexistir con prioridad alta, y «Solicitud sin confirmar» puede ser alta o media; se explica con evidencia y precedencia, no solo con el color.
 - En escritorio, reservar ancho para la acción no basta cuando el texto se corta por `white-space: nowrap`; envolver las celdas mantiene legible el siguiente paso.
+- La posición física de una fila es evidencia, no parte de la identidad ni del contenido de la línea: dos copias idénticas en filas distintas deben seguir consolidadas. Al recuperar la procedencia de un correo ya persistido, se contrasta su huella y se conserva la primera fila coincidente.

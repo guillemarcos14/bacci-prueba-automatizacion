@@ -58,7 +58,7 @@ def main() -> None:
                 version = connection.execute("PRAGMA user_version").fetchone()[0]
             finally:
                 connection.close()
-            if version < 3:
+            if version < 5:
                 run_import(db, dataset, orders, update_mail, UPDATE_CUTOFF)
         from .server import serve
         serve(db, orders, update_mail, args.port)

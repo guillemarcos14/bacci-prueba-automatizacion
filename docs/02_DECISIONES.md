@@ -23,3 +23,4 @@
 | 23/09/2026 | Calcular la etiqueta del caso en el motor y aplicar una precedencia explícita | Evita que el detalle contradiga la prioridad, el motivo o las anomalías; la regla está en `docs/PRIORITY.md`. |
 | 23/09/2026 | Interpretar `alta`, `media`, `baja` y `servido` como términos semánticos de búsqueda | Impide que la prioridad interna de una línea servida aparezca como `Baja`; las demás palabras se buscan en datos y evidencia. |
 | 23/09/2026 | Permitir el ajuste natural de las celdas de cliente, motivo y acción en escritorio | Mantiene visible la acción propuesta sin reducir el margen exterior solicitado. |
+| 23/09/2026 | Persistir archivo, hoja y fila física del primer correo y conservar cada fila ERP en el detalle | Permite contrastar cálculos y cruces con los XLSX originales; la posición no convierte duplicados idénticos en contradicciones. |

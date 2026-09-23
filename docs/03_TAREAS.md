@@ -20,4 +20,5 @@
 | Hecha | Ajustar marca lateral y separación de vistas | Tipografía igual en «Bacci»/«Operations» y espacio de 8 px comprobados en escritorio |
 | Hecha | Pulir estética de escritorio | Inter local, iconos uniformes, jerarquía tipográfica, controles alineados y fechas legibles a 1280 px |
 | Hecha | Afinar tarjeta de caso y pestañas de vistas | Fecha solicitada explícita, motivo breve y píldora activa a toda la altura de la barra |
+| Hecha | Completar trazabilidad funcional de ERP y correos | Filas físicas visibles, pedidas/enviadas/pendientes, migración de base anterior y 50/50 comprobaciones |
 | Pendiente | Grabar el vídeo final tras cerrar la plataforma | Petición expresa de Guillem: conservar de momento `demo-v4` |
