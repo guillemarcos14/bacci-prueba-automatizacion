@@ -5,24 +5,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#d2d3d6">
   <title>Bacci Operaciones</title>
+  <link rel="preload" href="/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
   <div class="workspace">
     <aside class="rail" aria-label="Navegación">
-      <div class="brand"><svg class="brand-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M12 1v22M1 12h22M4.2 4.2l15.6 15.6M19.8 4.2 4.2 19.8"/></svg><span class="brand-wordmark"><span>Bacci</span><span>Operations</span></span></div>
+      <div class="brand"><svg class="brand-symbol" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 1.5v21M1.5 12h21M4.6 4.6l14.8 14.8M19.4 4.6 4.6 19.4"/></svg><span class="brand-wordmark"><span>Bacci</span><span>Operations</span></span></div>
       <nav class="rail-items" aria-label="Secciones">
-        <button class="rail-pill active" type="button" data-section="queue"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Trabajo diario</button>
-        <button class="rail-pill" type="button" data-section="unresolved"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.6 2.6 0 0 1 5.1.6c0 1.7-2.6 2.1-2.6 4"/><path d="M12 17h.01"/></svg>Sin resolver</button>
-        <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Control de cargas</button>
+        <button class="rail-pill active" type="button" data-section="queue"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Trabajo diario</button>
+        <button class="rail-pill" type="button" data-section="unresolved"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 17h.01"/></svg>Sin resolver</button>
+        <button class="rail-pill" type="button" data-section="runs"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Control de cargas</button>
       </nav>
     </aside>
 
     <main class="content">
       <header class="app-top">
         <div><h1>Operaciones, al día</h1><p>Pedidos y correos traducidos en trabajo concreto.</p></div>
-        <div class="top-tools"><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span><span class="avatar" aria-label="Bacci Operaciones">BO</span></div>
+        <div class="top-tools"><span class="cutoff"><span class="live-dot"></span><span id="cutoff">Cargando corte…</span></span></div>
       </header>
 
       <div id="notice" class="notice" role="status" hidden></div>
@@ -38,9 +39,9 @@
           <div class="section-bar">
             <div><h2 id="queue-heading">Cola de trabajo</h2><p id="queue-description">Casos activos de todas las prioridades. Usa el filtro para ver solo «Alta».</p></div>
             <div class="filters">
-              <label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido, SKU, correo, fecha…" autocomplete="off">
-              <label for="client">Cliente</label><select id="client"><option value="">Todos</option></select>
-              <label for="priority">Prioridad</label><select id="priority"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baja</option></select>
+              <div class="filter-field"><label for="search">Buscar</label><input id="search" type="search" placeholder="Pedido, SKU, correo, fecha…" autocomplete="off"></div>
+              <div class="filter-field"><label for="client">Cliente</label><select id="client"><option value="">Todos</option></select></div>
+              <div class="filter-field"><label for="priority">Prioridad</label><select id="priority"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baja</option></select></div>
             </div>
           </div>
           <div class="table-wrap"><table><thead><tr><th>Prioridad</th><th>Pedido y línea</th><th>Cliente</th><th class="numeric">Pendiente</th><th>Motivo</th><th>Acción propuesta</th></tr></thead><tbody id="case-rows"></tbody></table></div>

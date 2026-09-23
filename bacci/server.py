@@ -53,7 +53,8 @@ def handler_factory(db: Path, orders: Path, update_mail: Path):
                 else:
                     route = {"/": ("index.html", "text/html; charset=utf-8"),
                              "/styles.css": ("styles.css", "text/css; charset=utf-8"),
-                             "/app.js": ("app.js", "text/javascript; charset=utf-8")}.get(parsed.path)
+                             "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+                             "/InterVariable.woff2": ("InterVariable.woff2", "font/woff2")}.get(parsed.path)
                     if route:
                         self._send(200, (WEB / route[0]).read_bytes(), route[1])
                     else:

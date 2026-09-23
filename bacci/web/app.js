@@ -2,6 +2,7 @@ if(new URLSearchParams(location.search).has('dataset'))history.replaceState(null
 const state = {section:'queue',view:'all',page:1,selected:null,summary:null,searchTimer:null,caseRequest:0};
 const $ = id => document.getElementById(id);
 const formatDate = value => value ? new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',year:'numeric'}).format(new Date(`${value.slice(0,10)}T12:00:00`)) : 'Sin dato';
+const compactDateTime = value => `${value.slice(8,10)}/${value.slice(5,7)} ${value.slice(11,16)}`;
 const number = value => value === null || value === undefined ? '—' : new Intl.NumberFormat('es-ES').format(value);
 
 async function api(path, options={}) {
@@ -105,7 +106,9 @@ async function showView(view,fromSection=false){state.view=view;state.page=1;doc
 async function loadRuns(){
   const runs=await api('/api/runs');const body=$('run-rows');body.replaceChildren();
   for(const run of runs){const tr=document.createElement('tr');
-    tr.append(cell(run.created_at.replace('T',' ')),cell(`${formatDate(run.as_of)} · ${run.as_of.slice(11,16)}`),cell(number(run.added_messages)),cell(number(run.repeated_messages)),cell(number(run.conflicting_messages)),cell(number(run.total_cases)),cell(`${number(run.elapsed_ms)} ms`),cell(run.output_sha256.slice(0,12)));
+    const executed=cell(compactDateTime(run.created_at)),cutoff=cell(compactDateTime(run.as_of));
+    executed.title=run.created_at;cutoff.title=run.as_of;
+    tr.append(executed,cutoff,cell(number(run.added_messages)),cell(number(run.repeated_messages)),cell(number(run.conflicting_messages)),cell(number(run.total_cases)),cell(`${number(run.elapsed_ms)} ms`),cell(run.output_sha256.slice(0,12)));
     body.append(tr);
   }
   const result=$('run-comparison');result.replaceChildren();
