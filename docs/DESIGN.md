@@ -4,7 +4,7 @@ La imagen ERP/POS aportada por Guillem es la autoridad estética, no funcional. 
 
 La marca lateral presenta «Bacci» y «Operations» en dos líneas con el mismo tamaño y peso. La barra gris de vistas deja una separación de 8 px respecto a la tarjeta de trabajo.
 
-La píldora blanca de la vista activa («Cola de trabajo» o «Todos los registros») ocupa los 41 px de altura de la barra gris, con los extremos redondeados. En la tarjeta de caso, «Fecha solicitada» distingue una petición por correo de la fecha del ERP; «Qué sabemos» muestra primero el motivo concreto y la nota de verificación se mantiene bajo el siguiente paso.
+La píldora blanca de la vista activa («Cola de trabajo» o «Todos los registros») ocupa los 41 px de altura de la barra gris, con los extremos redondeados. La primera pestaña llega hasta el borde izquierdo de la barra, sin franja gris entre ambas curvas y sin desplazar el texto. En la tarjeta de caso, «Fecha solicitada» distingue una petición por correo de la fecha del ERP; «Qué sabemos» muestra primero el motivo concreto y la nota de verificación se mantiene bajo el siguiente paso.
 
 ## Acabado de escritorio
 
