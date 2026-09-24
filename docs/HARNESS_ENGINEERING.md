@@ -7,9 +7,9 @@ python -m unittest discover -s tests -v
 python tools/harness.py --dataset both --output reports/validation.json
 ```
 
-El arnés crea bases temporales limpias para cada tamaño de datos; ejecuta el corte inicial, incorpora el lote y repite el lote. El JSON guarda cada esperado y obtenido, hashes, conteos y milisegundos. El comando devuelve error si un oráculo falla.
+El arnés crea bases temporales limpias para cada tamaño de datos; ejecuta el corte inicial, incorpora el lote y repite el lote. El JSON guarda cada resultado esperado y obtenido, las huellas, los conteos y los tiempos. El comando devuelve un error si alguna comprobación falla.
 
-## Oráculos
+## Comprobaciones
 
 - Cálculo: P-26004 tiene 250 pendientes; P-26003 tiene 300 tras consolidar duplicado idéntico; P-26009 conserva pendiente desconocido por contradicción; P-26008 no muestra backlog negativo por sobreexpedición.
 - Correo: P-26002 muestra 12/09 inicialmente, 13/09 tras la actualización, cuatro correos vinculados y el ERP intacto; P-99999 queda sin resolver; la cancelación de P-26001/20000 aparece aun con 0 pendientes.

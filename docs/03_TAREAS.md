@@ -21,6 +21,6 @@
 | Hecha | Pulir estética de escritorio | Inter local, iconos uniformes, jerarquía tipográfica, controles alineados y fechas legibles a 1280 px |
 | Hecha | Afinar tarjeta de caso y pestañas de vistas | Fecha solicitada explícita, motivo breve y píldora activa a toda la altura de la barra |
 | Hecha | Completar trazabilidad funcional de ERP y correos | Filas físicas visibles, pedidas/enviadas/pendientes y migración de base anterior; incluido en las 76/76 comprobaciones actuales |
-| Hecha | Mostrar impacto de cada carga y filtrar revisión humana | Dos cambios en actualización, cero al repetir; 7/767 casos filtrados; 76/76 oráculos y navegador en escritorio/móvil |
-| Hecha | Auditoría global previa a la entrega | Fecha ambigua corregida en 43 líneas, cuatro vistas y carga/repetición comprobadas, capturas actualizadas, 8 pruebas unitarias y 76/76 oráculos |
+| Hecha | Mostrar impacto de cada carga y filtrar revisión humana | Dos cambios en actualización, cero al repetir; 7/767 casos filtrados; 76/76 comprobaciones y navegador en escritorio/móvil |
+| Hecha | Auditoría global previa a la entrega | Fecha ambigua corregida en 43 líneas, cuatro vistas y carga/repetición comprobadas, capturas actualizadas, 8 pruebas unitarias y 76/76 comprobaciones |
 | Hecha | Adjuntar y enlazar el vídeo final | `Demo_Bacci.mp4` en la release pública `demo-v5`; enlace incorporado al README |

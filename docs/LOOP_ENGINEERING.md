@@ -16,4 +16,4 @@ Operaciones verifica stock, expedición, capacidad logística y autorización de
 
 ## Cierre del ciclo
 
-`tools/harness.py` compara resultados esperados/obtenidos y repite el lote. Un fallo detiene el cierre de la tarea. Si un caso revela una regla nueva, añadir primero un oráculo independiente, corregir el motor y registrar la decisión y el aprendizaje.
+`tools/harness.py` compara resultados esperados y obtenidos, y repite el lote. Un fallo detiene el cierre de la tarea. Si un caso revela una regla nueva, añadir primero una comprobación específica, corregir el motor y registrar la decisión y el aprendizaje.

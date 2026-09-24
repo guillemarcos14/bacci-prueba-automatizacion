@@ -2,7 +2,7 @@
 
 ## Resultado verificado
 
-Se revisaron motor de ingesta y clasificación, base SQLite, API local, interfaz de escritorio, búsqueda, textos y documentación contra el enunciado y los XLSX originales. La cola mantiene 17.423 casos activos, de ellos 569 sin correspondencia; «Todos los registros» contiene 19.969 registros, incluidas 2.546 líneas servidas. El arnés conserva 20/20 oráculos en muestra y 20/20 en completo, y la repetición del lote no altera el resultado. No se modificaron los XLSX, el PDF, el diccionario ni el vídeo.
+Se revisaron motor de ingesta y clasificación, base SQLite, API local, interfaz de escritorio, búsqueda, textos y documentación contra el enunciado y los XLSX originales. La cola mantiene 17.423 casos activos, de ellos 569 sin correspondencia; «Todos los registros» contiene 19.969 registros, incluidas 2.546 líneas servidas. En esta primera pasada, el arnés superó 20/20 comprobaciones en muestra y 20/20 en completo, y la repetición del lote no alteró el resultado. No se modificaron los XLSX, el PDF ni el diccionario.
 
 ## Hallazgos corregidos
 
@@ -19,16 +19,20 @@ Se revisaron motor de ingesta y clasificación, base SQLite, API local, interfaz
 3. **P2 · Navegación de una cola extensa.** Incorporar enlaces a casos concretos y tamaños de página opcionales; 17.423 casos en páginas de seis requieren buscar o filtrar para saltar lejos.
 4. **P2 · Índice de texto especializado si crece el volumen.** Medir consultas sobre archivos reales de operación y considerar FTS de SQLite; el prototipo usa `LIKE` sobre 19.969 registros y no promete un tiempo de búsqueda de producción.
 
-Las conexiones reales, stock, capacidad logística, autorización de contactos y el vídeo final siguen sujetos a las fuentes y decisiones de Bacci. Esta auditoría no los simula ni afirma haberlos validado.
+Las conexiones reales, stock, capacidad logística y autorización de contactos dependen de los sistemas y responsables de Bacci. Esta auditoría no los simula ni afirma haberlos validado.
 
 ## Cierre funcional posterior · 23/09/2026
 
-En esa iteración, el detalle pasó a exponer pedidas, enviadas acumuladas y pendientes junto a cada fila original del ERP (archivo, hoja y fila). Los correos mostraron la primera fila de origen, remitente, destinatario y texto completo. La migración recuperó la procedencia de mensajes ya almacenados contrastando su huella. Entonces pasaban 25/25 oráculos por conjunto y 7 pruebas unitarias; `reports/VALIDATION.md` recoge la evidencia más reciente. El vídeo final continúa pendiente.
+En esa iteración, el detalle pasó a exponer pedidas, enviadas acumuladas y pendientes junto a cada fila original del ERP (archivo, hoja y fila). Los correos mostraron la primera fila de origen, remitente, destinatario y texto completo. La migración recuperó la procedencia de mensajes ya almacenados contrastando su huella. Entonces pasaban 25/25 comprobaciones por conjunto y 7 pruebas unitarias; `reports/VALIDATION.md` recoge la evidencia más reciente.
 
 ## Impacto y revisión humana · 23/09/2026
 
-Las dos mejoras operativas propuestas están implementadas: Control de cargas compara los casos de cada ejecución y la cola filtra «Revisión humana». El navegador verificó ambos flujos en escritorio y móvil; `reports/VALIDATION.md` contiene la evidencia actual. El vídeo final permanece pendiente de la presentación.
+Las dos mejoras operativas propuestas están implementadas: Control de cargas compara los casos de cada ejecución y la cola filtra «Revisión humana». El navegador verificó ambos flujos en escritorio y móvil; `reports/VALIDATION.md` contiene la evidencia actual.
 
 ## Auditoría global previa al fork final · 23/09/2026
 
-Se recorrieron los menús, filtros, búsqueda, tabla, detalle, evidencia, actualización, repetición, navegación con teclado, estados vacíos y rutas de error en escritorio, tableta y móvil. Se detectó un fallo funcional: ante dos fechas solicitadas activas sin rectificación, la aplicación mostraba la última como única vigente. Ahora conserva y muestra todas, exige aclaración y mantiene la urgencia de cualquiera que venza hoy o antes. El arnés pasa 38/38 oráculos por tamaño, incluida la verificación global de aritmética, procedencia y etiquetas; pasan 8 pruebas unitarias. Se actualizaron las capturas del README. El fork y el vídeo final todavía deben cerrarse.
+Se recorrieron los menús, filtros, búsqueda, tabla, detalle, evidencia, actualización, repetición, navegación con teclado, estados vacíos y rutas de error en escritorio, tableta y móvil. Se detectó un fallo funcional: ante dos fechas solicitadas activas sin rectificación, la aplicación mostraba la última como única vigente. Ahora conserva y muestra todas, exige aclaración y mantiene la urgencia de cualquiera que venza hoy o antes. El arnés pasa 38/38 comprobaciones por tamaño, incluida la verificación global de aritmética, procedencia y etiquetas; pasan 8 pruebas unitarias. Se actualizaron las capturas del README.
+
+## Cierre de la entrega · 24/09/2026
+
+El fork público contiene la versión auditada y el vídeo final `Demo_Bacci.mp4` está disponible en la release `demo-v5`. El README enlaza la grabación y los resultados de validación. La última ejecución del arnés volvió a superar 38/38 comprobaciones en muestra y 38/38 en completo.

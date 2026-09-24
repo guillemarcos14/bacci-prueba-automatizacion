@@ -1,6 +1,6 @@
 # Validación ejecutada · 23/09/2026
 
-Fuente reproducible: `python tools/harness.py --dataset both --output reports/validation.json`. El JSON conserva los 76 oráculos con valor esperado y obtenido, hashes y tiempos exactos. Resultado: **76/76 comprobaciones conformes**.
+Se puede repetir con `python tools/harness.py --dataset both --output reports/validation.json`. El JSON guarda el valor esperado y el obtenido de las 76 comprobaciones, además de las huellas y los tiempos. Resultado: **76/76 comprobaciones correctas**.
 
 | Conjunto | Etapa | Mensajes nuevos | Reentregas ignoradas | Mensajes activos | Casos | Sin resolver | Tiempo |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
