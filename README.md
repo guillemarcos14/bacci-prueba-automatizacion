@@ -56,7 +56,7 @@ El alcance es un **prototipo local**. Herramientas libres. Puedes usar IA explic
 
 ![Vista de la cola operativa](docs/screenshots/desktop.png)
 
-La [demostración narrada de la iteración anterior](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v4/bacci-operaciones-demo.mp4) presenta el problema, el método, la aplicación, el conjunto completo y las validaciones en 2 min 42 s. Se grabará el vídeo final tras esta revisión. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola y [Control de cargas](docs/screenshots/control-cargas.png) muestra el efecto del lote de las 11:00.
+El [vídeo final dirigido al equipo de Bacci](https://github.com/guillemarcos14/bacci-prueba-automatizacion/releases/download/demo-v5/Demo_Bacci.mp4) recorre el problema, el proceso y las decisiones, y la demostración de la solución con sus validaciones. La [captura móvil](docs/screenshots/mobile.png) muestra cómo se adapta la cola y [Control de cargas](docs/screenshots/control-cargas.png) muestra el efecto del lote de las 11:00.
 
 ## Ejecutar en local
 

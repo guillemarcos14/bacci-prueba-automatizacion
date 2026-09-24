@@ -7,7 +7,7 @@
 | Hecha | Secuencia inicial, actualización y repetición | `reports/validation.json` |
 | Hecha | Cierre visual y de interacción en escritorio y móvil | `docs/screenshots/`, navegación real y comprobación de anchura móvil |
 | Hecha | README de entrega y guía diaria | Comandos, resultados, límites e integración futura |
-| Hecha | Vídeo de explicación y demostración | `demo-v4` del fork; fuente reproducible en `tools/video/` |
+| Hecha | Vídeo de explicación y demostración | Vídeo final adjunto en la release `demo-v5`; la iteración anterior permanece en `demo-v4` |
 | Hecha | Fork público y verificación de acceso | URL pública y recurso del vídeo comprobados |
 | Hecha | Revisión de fondo, búsqueda y alcance | Pantalla completa, valores indexados y vista de registros |
 | Hecha | Fijar datos completos y eliminar navegación duplicada | Servidor full, «Alta» como filtro, «Sin resolver» solo lateral |
@@ -23,4 +23,4 @@
 | Hecha | Completar trazabilidad funcional de ERP y correos | Filas físicas visibles, pedidas/enviadas/pendientes y migración de base anterior; incluido en las 76/76 comprobaciones actuales |
 | Hecha | Mostrar impacto de cada carga y filtrar revisión humana | Dos cambios en actualización, cero al repetir; 7/767 casos filtrados; 76/76 oráculos y navegador en escritorio/móvil |
 | Hecha | Auditoría global previa a la entrega | Fecha ambigua corregida en 43 líneas, cuatro vistas y carga/repetición comprobadas, capturas actualizadas, 8 pruebas unitarias y 76/76 oráculos |
-| Pendiente | Grabar el vídeo final tras cerrar la plataforma | Petición expresa de Guillem: conservar de momento `demo-v4` |
+| Hecha | Adjuntar y enlazar el vídeo final | `Demo_Bacci.mp4` en la release pública `demo-v5`; enlace incorporado al README |
